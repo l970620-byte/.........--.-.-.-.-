@@ -250,18 +250,18 @@ footer p{font-size:.62rem;color:#444;line-height:1.6;}
   <p>매일 오전 8시 · 낮 12시 · 오후 6시 자동 브리핑</p>
 </footer>
 <script>
-const DKW=["티빙 웨이브 합병","넷플릭스 한국","KBS 수신료","지상파 광고","공영방송 독립","토종 OTT","OTT 요금제","쿠팡플레이","숏폼 콘텐츠","라이브 스트리밍","K드라마 넷플릭스","웹툰 원작 드라마","AI 영상 제작","다큐멘터리","오리지널 콘텐츠","유튜버 규제","크리에이터 경제","AI 저작권","미디어 리터러시","가상인간"];
-const KICHUL=new Set(["KBS 수신료","토종 OTT","숏폼 콘텐츠","웹툰 원작 드라마","다큐멘터리","AI 저작권","가상인간","미디어 리터러시","공영방송 독립","지상파 광고"]);
+const DKW=["OTT 플랫폼","공영방송 위기","방송 규제 정책","숏폼 콘텐츠","K드라마 한류","웹툰 원작 드라마","다큐멘터리","예능 포맷 변화","AI와 방송","딥페이크 규제","크리에이터 경제","미디어 리터러시","유튜브 알고리즘","라이브 스트리밍","틱톡 규제","저널리즘 위기","방송 PD 직업관","방송작가 현실","영상 제작 기술","미디어 스타트업"];
+const KICHUL=new Set(["공영방송 위기","숏폼 콘텐츠","웹툰 원작 드라마","다큐멘터리","AI와 방송","딥페이크 규제","미디어 리터러시","저널리즘 위기","크리에이터 경제","방송 규제 정책"]);
 const COL_SRC=[{url:'http://www.hani.co.kr/rss/opinion/',name:'한겨레'},{url:'https://www.khan.co.kr/rss/rssdata/opinion.xml',name:'경향신문'},{url:'http://rss.donga.com/column.xml',name:'동아일보'},{url:'https://rss.joins.com/joins_opinion_list.xml',name:'중앙일보'},{url:'https://www.chosun.com/arc/outboundfeeds/rss/category/opinion/',name:'조선일보'},{url:'https://www.hankookilbo.com/rss/section/opinion',name:'한국일보'},{url:'https://www.mediatoday.co.kr/rss/allArticle.xml',name:'미디어오늘'},{url:'https://www.pdjournal.com/rss/allArticle.xml',name:'PD저널'},{url:'https://www.mediaus.co.kr/rss/allArticle.xml',name:'미디어스'},{url:'http://www.sisain.co.kr/rss/allArticle.xml',name:'시사IN'},{url:'http://www.ohmynews.com/rss/ohmynews.xml',name:'오마이뉴스'},{url:'https://www.cine21.com/news/rss/',name:'씨네21'},{url:'https://www.artinsight.co.kr/rss/rss.php',name:'아트인사이트'},{url:'https://www.etnews.com/rss/section/section001.xml',name:'전자신문'}];
 const NEWS_SRC=[{url:'https://news.kbs.co.kr/rss/rss.do?catecd=0000',name:'KBS'},{url:'http://imnews.imbc.com/rss/news/news_00.xml',name:'MBC'},{url:'https://news.sbs.co.kr/news/rssVodFeed.do?pmd=News&ctgry=culture',name:'SBS'},{url:'https://www.khan.co.kr/rss/rssdata/culture.xml',name:'경향신문'},{url:'http://www.hani.co.kr/rss/culture/',name:'한겨레'},{url:'https://www.yonhapnews.co.kr/RSS/culture.xml',name:'연합뉴스'},{url:'https://www.etnews.com/rss/section/section001.xml',name:'전자신문'},{url:'https://www.mediatoday.co.kr/rss/allArticle.xml',name:'미디어오늘'}];
-const BH=[8,12,18],KK='news_keywords_v5';
+const BH=[8,12,18],KK='news_keywords_v6';
 let kws=[],aKw='',aDays=1,scraps={};
 
 function switchTab(t,b){document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('panel-'+t).classList.add('active');if(t==='scrap')renderScraps();}
 function setRange(b){document.querySelectorAll('.date-chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');aDays=parseInt(b.dataset.days);document.getElementById('date-custom').classList.toggle('show',aDays===0);}
 function getDF(){if(aDays===0){const f=document.getElementById('date-from').value,to=document.getElementById('date-to').value;return[f?'after:'+f:'',to?'before:'+to:''].filter(Boolean).join('+');}return'when:'+aDays+'d';}
 function getRL(){return{1:'1DAY',7:'7일',30:'1달',365:'1년',0:'직접 지정'}[aDays]||aDays+'일';}
-function loadKw(){if(!localStorage.getItem('kw_reset_v5')){localStorage.removeItem(KK);localStorage.setItem('kw_reset_v5','1');}try{const s=localStorage.getItem(KK);kws=s?JSON.parse(s):[...DKW];}catch(e){kws=[...DKW];}if(!kws.length)kws=[...DKW];aKw=kws[0];renderKw();updSels();}
+function loadKw(){if(!localStorage.getItem('kw_reset_v6')){localStorage.removeItem(KK);localStorage.setItem('kw_reset_v6','1');}try{const s=localStorage.getItem(KK);kws=s?JSON.parse(s):[...DKW];}catch(e){kws=[...DKW];}if(!kws.length)kws=[...DKW];aKw=kws[0];renderKw();updSels();}
 function saveKw(){try{localStorage.setItem(KK,JSON.stringify(kws));}catch(e){}}
 function renderKw(){document.getElementById('kw-list').innerHTML=kws.map(kw=>{const b=KICHUL.has(kw)?'<span style="font-size:.58rem;background:rgba(255,224,51,.18);color:var(--yellow);border-radius:3px;padding:0 4px;font-weight:700;margin-left:2px;">기출</span>':'';const s=kw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");return'<button class="kw-chip'+(kw===aKw?' active':'')+'" onclick="selKw(\''+s+'\')">'+kw+b+'<span class="del" onclick="delKw(event,\''+s+'\')">✕</span></button>';}).join('');}
 function selKw(k){aKw=k;renderKw();}
