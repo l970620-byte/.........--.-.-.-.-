@@ -480,12 +480,12 @@ async function fetchAll(){
       const filterRes=await fetch('/api/summarize',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
+       body:JSON.stringify({
           mode:'filter',
-          headlines:allArticles.map(a=>a.title),
-          descriptions:allArticles.map(a=>a.desc||''),
+          headlines:allArticles.slice(0,30).map(a=>a.title),
+          descriptions:allArticles.slice(0,30).map(a=>a.desc||''),
           keyword:activeKeyword
-        })
+        }) 
       });
       const filterData=await filterRes.json();
       if(filterData.results){
