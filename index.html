@@ -286,9 +286,9 @@ function getRangeLabel(){return{1:'1DAY',7:'7일',30:'1달',365:'1년',0:'직접
 
 function loadKeywords(){
   // 키워드 강제 리셋 (코드 업데이트 시 자동 반영)
-  if(!localStorage.getItem('kw_reset_v4')){
+  if(!localStorage.getItem('kw_reset_v5')){
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.setItem('kw_reset_v4','1');
+    localStorage.setItem('kw_reset_v5','1');
   }
   try{const s=localStorage.getItem(STORAGE_KEY);keywords=s?JSON.parse(s):[...DEFAULT_KEYWORDS];}
   catch(e){keywords=[...DEFAULT_KEYWORDS];}
