@@ -1,4 +1,18 @@
 // api/summarize.js — Vercel 서버리스 함수
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'API 키 없음' });
+
+  // 키 앞 10자리만 반환 (테스트용)
+  return res.status(200).json({ summary: 'KEY:' + apiKey.slice(0, 10) });
+}
+// api/summarize.js — Vercel 서버리스 함수
 // API 키는 Vercel 환경변수 ANTHROPIC_API_KEY 에 저장 (코드에 노출 안 됨)
 
 export default async function handler(req, res) {
