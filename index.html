@@ -1,96 +1,479 @@
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>온에어 브리핑 — 서울예대 방송영상 입시</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root { --bg:#0a0a0a; --red:#ff2d2d; --yellow:#ffe033; --blue:#7bb4ff; --white:#f5f3ee; --gray:#1c1c1c; --muted:#555; --border:#222; --card:#141414; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--white); font-family:'Noto Sans KR',sans-serif; font-weight:300; min-height:100vh; overflow-x:hidden; }
+header { position:sticky; top:0; z-index:100; background:var(--bg); border-bottom:1px solid var(--border); padding:0 1.2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
+.logo { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.08em; color:var(--white); display:flex; align-items:center; gap:0.5rem; }
+.logo .on-air { display:inline-flex; align-items:center; gap:0.3rem; background:var(--red); color:white; font-size:0.6rem; font-family:'Noto Sans KR',sans-serif; font-weight:700; padding:0.15rem 0.4rem; border-radius:2px; letter-spacing:0.1em; }
+.on-air-dot { width:5px; height:5px; background:white; border-radius:50%; animation:blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+#clock { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:0.1em; color:var(--yellow); }
+.brief-strip { background:var(--gray); border-bottom:1px solid var(--border); display:flex; align-items:center; overflow-x:auto; scrollbar-width:none; padding:0 1.2rem; height:36px; }
+.brief-strip::-webkit-scrollbar { display:none; }
+.brief-label { font-size:0.6rem; letter-spacing:0.2em; color:var(--muted); text-transform:uppercase; white-space:nowrap; margin-right:0.8rem; }
+.bt { font-family:'Bebas Neue',sans-serif; font-size:0.85rem; padding:0 0.7rem; height:22px; display:inline-flex; align-items:center; letter-spacing:0.08em; border:1px solid var(--border); border-radius:2px; color:var(--muted); margin-right:0.4rem; white-space:nowrap; transition:all 0.2s; }
+.bt.done { border-color:#333; color:#444; text-decoration:line-through; }
+.bt.next { border-color:var(--red); color:var(--red); animation:blink 1.2s infinite; }
+.bt.upcoming { border-color:var(--muted); color:var(--muted); }
+.next-label { font-size:0.6rem; color:var(--muted); white-space:nowrap; margin-left:auto; padding-left:0.8rem; }
+.next-label span { color:var(--yellow); }
+.section { padding:1rem 1.2rem 0.6rem; border-bottom:1px solid var(--border); }
+.section-title { font-size:0.6rem; letter-spacing:0.25em; color:var(--muted); text-transform:uppercase; margin-bottom:0.7rem; }
+.keyword-list { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem; }
+.kw-chip { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.78rem; font-weight:500; padding:0.3rem 0.7rem; border:1px solid var(--border); border-radius:100px; background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.kw-chip:hover { border-color:#555; color:var(--white); }
+.kw-chip.active { border-color:var(--yellow); color:var(--yellow); background:rgba(255,224,51,0.07); }
+.kw-chip .del-btn { display:none; font-size:0.7rem; color:var(--red); line-height:1; }
+.kw-chip:hover .del-btn { display:inline; }
+.kw-add-row { display:flex; gap:0.5rem; align-items:center; }
+.kw-input { flex:1; max-width:200px; background:var(--gray); border:1px solid var(--border); color:var(--white); font-family:'Noto Sans KR',sans-serif; font-size:0.8rem; padding:0.35rem 0.7rem; border-radius:100px; outline:none; transition:border-color 0.15s; }
+.kw-input::placeholder { color:var(--muted); }
+.kw-input:focus { border-color:var(--yellow); }
+.kw-add-btn { font-size:0.75rem; font-weight:700; padding:0.35rem 0.9rem; background:var(--yellow); color:var(--bg); border:none; border-radius:100px; cursor:pointer; transition:opacity 0.15s; white-space:nowrap; }
+.kw-add-btn:hover { opacity:0.85; }
+.date-bar { padding:0.6rem 1.2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+.date-label { font-size:0.6rem; letter-spacing:0.15em; color:var(--muted); text-transform:uppercase; white-space:nowrap; }
+.date-chip { font-family:'Bebas Neue',sans-serif; font-size:0.85rem; letter-spacing:0.08em; padding:0.25rem 0.85rem; border:1px solid var(--border); border-radius:100px; background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.date-chip:hover { border-color:#555; color:var(--white); }
+.date-chip.active { border-color:var(--yellow); color:var(--yellow); background:rgba(255,224,51,0.07); }
+.date-custom { display:none; align-items:center; gap:0.4rem; width:100%; margin-top:0.3rem; }
+.date-custom.show { display:flex; }
+.date-input { background:var(--gray); border:1px solid var(--border); color:var(--white); font-family:'Noto Sans KR',sans-serif; font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:6px; outline:none; transition:border-color 0.15s; color-scheme:dark; }
+.date-input:focus { border-color:var(--yellow); }
+.fetch-bar { padding:0.8rem 1.2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; }
+.fetch-btn { flex:1; min-width:140px; font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.12em; padding:0.6rem 1.5rem; background:var(--red); color:white; border:none; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.4rem; transition:opacity 0.2s; }
+.fetch-btn:hover { opacity:0.85; }
+.fetch-btn:disabled { opacity:0.35; cursor:not-allowed; }
+#status-text { font-size:0.72rem; color:var(--muted); flex:2; }
+#status-text.live { color:var(--yellow); }
+.sum-btn { font-size:0.7rem; font-weight:600; letter-spacing:0.08em; padding:0.28rem 0.8rem; border:1px solid var(--yellow); border-radius:4px; background:rgba(255,224,51,0.08); color:var(--yellow); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.sum-btn:hover { background:rgba(255,224,51,0.18); }
+.sum-btn:disabled { opacity:0.35; cursor:not-allowed; }
+.tab-bar { display:flex; border-bottom:1px solid var(--border); padding:0 1.2rem; }
+.tab-btn { font-family:'Bebas Neue',sans-serif; font-size:0.9rem; letter-spacing:0.1em; padding:0.7rem 1.2rem; border:none; background:transparent; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; display:flex; align-items:center; gap:0.4rem; }
+.tab-btn:hover { color:var(--white); }
+.tab-btn.active { color:var(--yellow); border-bottom-color:var(--yellow); }
+.tab-count { font-size:0.6rem; font-family:'Noto Sans KR',sans-serif; font-weight:700; background:rgba(255,224,51,0.15); color:var(--yellow); border-radius:100px; padding:1px 6px; }
+.tab-btn.col-tab.active { color:var(--blue); border-bottom-color:var(--blue); }
+.tab-btn.col-tab .tab-count { background:rgba(123,180,255,0.15); color:var(--blue); }
+.summary-wrap { margin:1rem 1.2rem 0; border:1px solid var(--border); border-radius:8px; overflow:hidden; display:none; }
+.summary-wrap.visible { display:block; }
+.summary-header { background:rgba(255,224,51,0.08); border-bottom:1px solid var(--border); padding:0.5rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
+.summary-title { font-size:0.65rem; font-weight:700; letter-spacing:0.15em; color:var(--yellow); text-transform:uppercase; }
+.summary-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; line-height:1; padding:0; }
+.summary-body { padding:1rem; font-size:0.82rem; line-height:1.7; color:#ccc; white-space:pre-wrap; min-height:60px; }
+main { padding:1rem 1.2rem 4rem; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+.news-grid { display:grid; grid-template-columns:1fr; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+@media (min-width:640px) { .news-grid { grid-template-columns:repeat(2,1fr); } }
+@media (min-width:1024px) { .news-grid { grid-template-columns:repeat(3,1fr); } .news-card:first-child { grid-column:span 2; } }
+.news-card { background:var(--card); padding:1.4rem; display:flex; flex-direction:column; gap:0.8rem; animation:fadeUp 0.35s ease both; transition:background 0.15s; }
+.news-card:hover { background:#1a1a1a; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; }
+.card-idx { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; line-height:1; color:var(--border); }
+.news-card:first-child .card-idx { color:var(--red); }
+.col-panel .news-card:first-child .card-idx { color:var(--blue); }
+.card-source { font-size:0.62rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; text-align:right; line-height:1.4; }
+.card-title { font-size:0.95rem; font-weight:500; line-height:1.55; }
+.news-card:first-child .card-title { font-size:1.1rem; }
+.card-title a { color:var(--white); text-decoration:none; }
+.card-title a:hover { color:var(--yellow); }
+.col-panel .card-title a:hover { color:var(--blue); }
+.card-ai-summary { font-size:0.72rem; color:#999; line-height:1.55; border-top:1px solid var(--border); padding-top:0.6rem; }
+.ai-badge { font-size:0.55rem; font-weight:700; letter-spacing:0.1em; background:rgba(255,224,51,0.1); color:var(--yellow); border:1px solid rgba(255,224,51,0.3); border-radius:3px; padding:1px 5px; margin-right:0.4rem; vertical-align:middle; }
+.card-date { font-size:0.68rem; color:var(--muted); }
+.skeleton-card { background:var(--card); padding:1.4rem; display:flex; flex-direction:column; gap:0.7rem; }
+.skel { background:linear-gradient(90deg,var(--border) 25%,#2a2a2a 50%,var(--border) 75%); background-size:300% 100%; animation:shimmer 1.4s infinite; border-radius:3px; height:12px; }
+.skel.lg { height:18px; width:80%; }
+.skel.sm { width:50%; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.empty { grid-column:1/-1; padding:4rem 1rem; text-align:center; }
+.empty-icon { font-size:2.5rem; opacity:0.2; margin-bottom:1rem; }
+.empty p { font-size:0.85rem; color:var(--muted); line-height:1.8; }
+.empty strong { display:block; color:#666; font-size:0.95rem; margin-bottom:0.3rem; font-weight:500; }
+.error-bar { display:none; margin-bottom:0.8rem; padding:0.6rem 0.9rem; background:rgba(255,45,45,0.08); border:1px solid var(--red); border-radius:4px; font-size:0.75rem; color:#ff7777; }
+footer { padding:1.2rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; }
+footer p { font-size:0.62rem; color:#444; line-height:1.6; }
+.free-badge { display:inline-block; font-size:0.55rem; font-weight:700; background:rgba(80,200,80,0.15); color:#5c5; border:1px solid #3a3; border-radius:3px; padding:1px 5px; letter-spacing:0.1em; margin-left:0.4rem; vertical-align:middle; }
+</style>
+</head>
+<body>
 
-  const { mode, headlines, descriptions, keyword } = req.body;
-  if (!headlines?.length) return res.status(400).json({ error: 'headlines 필요' });
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API 키 미설정' });
+<header>
+  <div class="logo">
+    <span class="on-air"><span class="on-air-dot"></span>ON AIR</span>
+    브리핑
+    <span class="free-badge">FREE</span>
+  </div>
+  <div id="clock">--:--:--</div>
+</header>
 
-  let prompt;
+<div class="brief-strip">
+  <span class="brief-label">BRIEFING</span>
+  <span class="bt" id="bt-8">오전 8:00</span>
+  <span class="bt" id="bt-12">오후 12:00</span>
+  <span class="bt" id="bt-18">오후 6:00</span>
+  <span class="next-label">다음: <span id="next-brief">--:--</span></span>
+</div>
 
-  if (mode === 'filter') {
-    const list = headlines.map((h, i) => {
-      const desc = descriptions?.[i] ? ` / ${descriptions[i].slice(0, 80)}` : '';
-      return `[${i}] ${h}${desc}`;
-    }).join('\n');
+<div class="section">
+  <div class="section-title">키워드 관리 — 클릭해서 선택 · ✕로 삭제 · 직접 추가 가능</div>
+  <div class="keyword-list" id="kw-list"></div>
+  <div class="kw-add-row">
+    <input class="kw-input" id="kw-input" placeholder="키워드 추가..." maxlength="20">
+    <button class="kw-add-btn" onclick="addKeyword()">+ 추가</button>
+  </div>
+</div>
 
-    prompt = `당신은 방송영상 전공 입시 전문 큐레이터입니다.
-키워드: "${keyword}"
+<div class="date-bar">
+  <span class="date-label">기간</span>
+  <button class="date-chip active" data-days="1" onclick="setRange(this)">1DAY</button>
+  <button class="date-chip" data-days="7" onclick="setRange(this)">7일</button>
+  <button class="date-chip" data-days="30" onclick="setRange(this)">1달</button>
+  <button class="date-chip" data-days="365" onclick="setRange(this)">1년</button>
+  <button class="date-chip" data-days="0" onclick="setRange(this)">직접 지정</button>
+  <div class="date-custom" id="date-custom">
+    <span style="color:var(--muted);font-size:0.7rem;">시작</span>
+    <input type="date" class="date-input" id="date-from">
+    <span style="color:var(--muted);font-size:0.7rem;">~</span>
+    <input type="date" class="date-input" id="date-to">
+  </div>
+</div>
 
-아래 기사/칼럼 목록을 보고 판단하세요.
+<div class="fetch-bar">
+  <button class="fetch-btn" id="fetch-btn" onclick="fetchAll()">▶ 불러오기</button>
+  <button class="sum-btn" id="sum-btn" onclick="summarizeNews()" disabled>✦ AI 요약</button>
+  <span id="status-text">키워드를 선택하고 불러오세요</span>
+</div>
 
-${list}
+<div class="summary-wrap" id="summary-wrap">
+  <div class="summary-header">
+    <span class="summary-title">✦ AI 3줄 브리핑 — <span id="sum-keyword"></span></span>
+    <button class="summary-close" onclick="closeSummary()">✕</button>
+  </div>
+  <div class="summary-body" id="summary-body"></div>
+</div>
 
-판단 기준:
-1. 한국어 기사/칼럼인지 (제목에 한글 포함 필수)
-2. "${keyword}"와 실질적으로 관련 있는지
-   - 직접: 해당 키워드·하위 개념을 다루는 것
-   - 간접: 미디어·방송·OTT·콘텐츠 산업 맥락에서 연관된 것
-   - 제외: 완전 무관한 연예·스포츠·정치·경제 일반 뉴스
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('news',this)">
+    📰 뉴스 <span class="tab-count" id="news-count">0</span>
+  </button>
+  <button class="tab-btn col-tab" onclick="switchTab('col',this)">
+    ✍️ 칼럼 <span class="tab-count" id="col-count">0</span>
+  </button>
+</div>
 
-응답 형식 (JSON만, 다른 말 없이):
-{"results":[{"idx":0,"relevant":true,"summary":"한 줄 요약"},{"idx":1,"relevant":false,"summary":""},...]}
+<main>
+  <div class="error-bar" id="error-bar"></div>
+  <div class="tab-panel active" id="panel-news">
+    <div class="news-grid" id="news-grid">
+      <div class="empty"><div class="empty-icon">📡</div><p><strong>브리핑 대기 중</strong>키워드를 선택하고<br>「불러오기」를 눌러보세요</p></div>
+    </div>
+  </div>
+  <div class="tab-panel" id="panel-col">
+    <div class="news-grid col-panel" id="col-grid">
+      <div class="empty"><div class="empty-icon">✍️</div><p><strong>칼럼 대기 중</strong>불러오기 후 칼럼 탭을 확인하세요</p></div>
+    </div>
+  </div>
+</main>
 
-모든 항목에 대해 빠짐없이 응답하세요.`;
+<footer>
+  <p>서울예술대학교 방송영상전공 입시 대비<br>Google News RSS + 미디어오늘 · 한겨레 · 씨네21 · 아트인사이트</p>
+  <p>매일 오전 8시 · 낮 12시 · 오후 6시 자동 브리핑</p>
+</footer>
 
-  } else {
-    const headlineText = headlines.map((h, i) => `${i + 1}. ${h}`).join('\n');
-    prompt = `다음은 "${keyword}" 관련 최신 뉴스/칼럼 헤드라인들입니다.
+<script>
+const DEFAULT_KEYWORDS = [
+  "OTT 플랫폼","공영방송 수신료","방송 보편적 접근성","토종 OTT",
+  "숏폼 콘텐츠","웹툰 드라마화","유튜브 TV화","다큐멘터리",
+  "AI 저작권","버추얼 휴먼","예술인 도덕성",
+  "K콘텐츠 글로벌화","방송 광고 시장","1인 미디어 규제",
+  "AI 방송 제작","크리에이터 경제","미디어 리터러시",
+  "MZ 미디어","방송 콘텐츠 다양성","라이브 스트리밍"
+];
+const KICHUL_SET = new Set([
+  "OTT 플랫폼","공영방송 수신료","방송 보편적 접근성","토종 OTT",
+  "숏폼 콘텐츠","웹툰 드라마화","유튜브 TV화","다큐멘터리",
+  "AI 저작권","버추얼 휴먼","예술인 도덕성"
+]);
+const COLUMN_SOURCES = [
+  { url:'https://www.mediatoday.co.kr/rss/allArticle.xml', name:'미디어오늘' },
+  { url:'http://www.hani.co.kr/rss/opinion/', name:'한겨레 오피니언' },
+  { url:'https://www.cine21.com/news/rss/', name:'씨네21' },
+  { url:'https://www.artinsight.co.kr/rss/rss.php', name:'아트인사이트' }
+];
+const STORAGE_KEY = 'news_keywords_v3';
+const BRIEFING_HOURS = [8,12,18];
+const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+let keywords=[], activeKeyword='', activeDays=1;
 
-${headlineText}
-
-위 헤드라인들을 바탕으로:
-1. 핵심 흐름을 3줄로 요약해주세요
-2. 방송영상 입시생이 주목해야 할 핵심 키워드 3개를 뽑아주세요
-
-형식:
-【3줄 요약】
-- (첫 번째)
-- (두 번째)
-- (세 번째)
-
-【핵심 키워드】
-#키워드1 #키워드2 #키워드3`;
-  }
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: mode === 'filter' ? 1500 : 500,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      return res.status(500).json({ error: err.error?.message || '요청 실패' });
-    }
-
-    const data = await response.json();
-    const text = (data.content?.[0]?.text || '').trim();
-
-    if (mode === 'filter') {
-      try {
-        const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-        return res.status(200).json(parsed);
-      } catch(e) {
-        return res.status(500).json({ error: 'AI 파싱 실패' });
-      }
-    } else {
-      return res.status(200).json({ summary: text });
-    }
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`panel-${tab}`).classList.add('active');
 }
+function setRange(btn){
+  document.querySelectorAll('.date-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  activeDays=parseInt(btn.dataset.days);
+  const box=document.getElementById('date-custom');
+  activeDays===0?box.classList.add('show'):box.classList.remove('show');
+}
+function getDateFilter(){
+  if(activeDays===0){
+    const from=document.getElementById('date-from').value;
+    const to=document.getElementById('date-to').value;
+    if(!from&&!to)return'';
+    return[from?`after:${from}`:'',to?`before:${to}`:''].filter(Boolean).join('+');
+  }
+  return`when:${activeDays}d`;
+}
+function getRangeLabel(){return{1:'1DAY',7:'7일',30:'1달',365:'1년',0:'직접 지정'}[activeDays]||`${activeDays}일`;}
+
+function loadKeywords(){
+  try{const s=localStorage.getItem(STORAGE_KEY);keywords=s?JSON.parse(s):[...DEFAULT_KEYWORDS];}
+  catch(e){keywords=[...DEFAULT_KEYWORDS];}
+  if(!keywords.length)keywords=[...DEFAULT_KEYWORDS];
+  activeKeyword=keywords[0];renderKeywords();
+}
+function saveKeywords(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(keywords));}catch(e){}}
+function renderKeywords(){
+  document.getElementById('kw-list').innerHTML=keywords.map(kw=>{
+    const badge=KICHUL_SET.has(kw)?`<span style="font-size:0.58rem;background:rgba(255,224,51,0.18);color:var(--yellow);border-radius:3px;padding:0 4px;font-weight:700;margin-left:2px;">기출</span>`:'';
+    return`<button class="kw-chip ${kw===activeKeyword?'active':''}" onclick="selectKw('${kw.replace(/'/g,"\\'")}')">
+      ${kw}${badge}<span class="del-btn" onclick="delKw(event,'${kw.replace(/'/g,"\\'")}')">✕</span>
+    </button>`;
+  }).join('');
+}
+function selectKw(kw){activeKeyword=kw;renderKeywords();}
+function delKw(e,kw){
+  e.stopPropagation();
+  keywords=keywords.filter(k=>k!==kw);
+  if(activeKeyword===kw)activeKeyword=keywords[0]||'';
+  saveKeywords();renderKeywords();
+}
+function addKeyword(){
+  const input=document.getElementById('kw-input');
+  const val=input.value.trim();
+  if(!val||keywords.includes(val)){input.value='';return;}
+  keywords.push(val);activeKeyword=val;
+  saveKeywords();renderKeywords();input.value='';
+}
+document.getElementById('kw-input').addEventListener('keydown',e=>{if(e.key==='Enter')addKeyword();});
+
+function tick(){
+  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  document.getElementById('clock').textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const h=now.getHours(),ids={8:'bt-8',12:'bt-12',18:'bt-18'};
+  let nextStr=null;
+  BRIEFING_HOURS.forEach(bh=>{
+    const el=document.getElementById(ids[bh]);
+    if(h>bh)el.className='bt done';
+    else if(h===bh)el.className='bt next';
+    else{el.className='bt upcoming';if(!nextStr)nextStr=`${pad(bh)}:00`;}
+  });
+  document.getElementById('next-brief').textContent=nextStr||'내일 08:00';
+  if(now.getMinutes()===0&&now.getSeconds()===0&&BRIEFING_HOURS.includes(h))fetchAll();
+}
+setInterval(tick,1000);tick();
+
+function isKorean(str){return /[가-힣]/.test(str);}
+
+async function fetchRss(url){
+  try{
+    const r=await fetch(`${RSS_PROXY}${encodeURIComponent(url)}&count=10`);
+    const d=await r.json();
+    return(d.status==='ok'&&d.items)?d.items:[];
+  }catch(e){return[];}
+}
+
+async function fetchAll(){
+  if(!activeKeyword)return;
+  const btn=document.getElementById('fetch-btn');
+  const statusEl=document.getElementById('status-text');
+  const errorBar=document.getElementById('error-bar');
+  btn.disabled=true;
+  errorBar.style.display='none';
+  statusEl.className='live';
+  statusEl.textContent=`"${activeKeyword}" 검색 중...`;
+
+  const skeleton=Array(6).fill('').map(()=>`<div class="skeleton-card"><div class="skel sm"></div><div class="skel lg"></div><div class="skel"></div><div class="skel sm"></div></div>`).join('');
+  document.getElementById('news-grid').innerHTML=skeleton;
+  document.getElementById('col-grid').innerHTML=skeleton;
+
+  try{
+    const dateFilter=getDateFilter();
+    const q=dateFilter?`${activeKeyword} ${dateFilter}`:activeKeyword;
+
+    const newsQueries=[
+      q,
+      `${activeKeyword} 뉴스 ${dateFilter}`.trim(),
+      `${activeKeyword} 최신 ${dateFilter}`.trim()
+    ];
+    const newsPromises=newsQueries.map(nq=>
+      fetchRss(`https://news.google.com/rss/search?q=${encodeURIComponent(nq)}&hl=ko&gl=KR&ceid=KR:ko`)
+    );
+    const colPromises=COLUMN_SOURCES.map(src=>
+      fetch(`${RSS_PROXY}${encodeURIComponent(src.url)}&count=50`)
+        .then(r=>r.json()).then(d=>({d,name:src.name})).catch(()=>null)
+    );
+    const[newsResults,colResults]=await Promise.all([
+      Promise.all(newsPromises),
+      Promise.all(colPromises)
+    ]);
+
+    const seenUrls=new Set(),seenTitles=new Set();
+    let newsArticles=[];
+    for(const items of newsResults){
+      for(const item of items){
+        const title=stripHtml(item.title);
+        if(seenUrls.has(item.link)||seenTitles.has(title))continue;
+        if(!isKorean(title))continue;
+        seenUrls.add(item.link);seenTitles.add(title);
+        newsArticles.push({title,url:item.link,source:item.author||extractSource(item.title),date:formatDate(item.pubDate),desc:stripHtml(item.description||'').slice(0,150)});
+      }
+    }
+    if(!newsArticles.length)throw new Error('검색 결과가 없습니다. 기간을 늘려보세요.');
+
+    const kwWords=activeKeyword.toLowerCase().split(/\s+/).filter(w=>w.length>1);
+    let columnArticles=[];
+    for(const result of colResults){
+      if(!result||result.d?.status!=='ok'||!result.d.items)continue;
+      const matched=result.d.items.filter(item=>{
+        const t=stripHtml(item.title||'');
+        if(!isKorean(t))return false;
+        const tl=t.toLowerCase();
+        const desc=stripHtml(item.description||'').toLowerCase();
+        return kwWords.some(w=>tl.includes(w)||desc.includes(w));
+      }).map(item=>({title:stripHtml(item.title),url:item.link,source:result.name,date:formatDate(item.pubDate),desc:stripHtml(item.description||'').slice(0,150)}));
+      for(const a of matched){
+        if(seenUrls.has(a.url)||seenTitles.has(a.title))continue;
+        seenUrls.add(a.url);seenTitles.add(a.title);
+        columnArticles.push(a);
+      }
+    }
+
+    statusEl.textContent='✦ AI 관련성 분석 중...';
+    const allArticles=[...newsArticles,...columnArticles];
+    let filteredNews=newsArticles;
+    let filteredCol=columnArticles;
+
+    try{
+      const filterRes=await fetch('/api/summarize',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          mode:'filter',
+          headlines:allArticles.map(a=>a.title),
+          descriptions:allArticles.map(a=>a.desc||''),
+          keyword:activeKeyword
+        })
+      });
+      const filterData=await filterRes.json();
+      if(filterData.results){
+        const summaryMap={};
+        filterData.results.forEach(r=>{if(r.summary)summaryMap[r.idx]=r.summary;});
+        const relevantIdx=new Set(filterData.results.filter(r=>r.relevant).map(r=>r.idx));
+        filteredNews=newsArticles
+          .map((a,i)=>({...a,aiSummary:summaryMap[i]||''}))
+          .filter((_,i)=>relevantIdx.has(i));
+        filteredCol=columnArticles
+          .map((a,i)=>({...a,aiSummary:summaryMap[newsArticles.length+i]||''}))
+          .filter((_,i)=>relevantIdx.has(newsArticles.length+i));
+      }
+    }catch(e){console.warn('AI 필터 실패, 전체 표시');}
+
+    renderGrid('news-grid',filteredNews,'news');
+    renderGrid('col-grid',filteredCol,'col');
+    document.getElementById('news-count').textContent=filteredNews.length;
+    document.getElementById('col-count').textContent=filteredCol.length;
+    statusEl.className='live';
+    statusEl.textContent=`뉴스 ${filteredNews.length}건 · 칼럼 ${filteredCol.length}건 · ${getRangeLabel()} · ${new Date().toLocaleTimeString('ko-KR')}`;
+    document.getElementById('sum-btn').disabled=false;
+    window._lastHeadlines=[...filteredNews,...filteredCol].map(a=>a.title);
+    closeSummary();
+
+  }catch(err){
+    const errHtml=`<div class="empty"><div class="empty-icon">⚠️</div><p><strong>불러오기 실패</strong>${err.message}</p></div>`;
+    document.getElementById('news-grid').innerHTML=errHtml;
+    document.getElementById('col-grid').innerHTML=errHtml;
+    errorBar.textContent='오류: '+err.message;
+    errorBar.style.display='block';
+    statusEl.className='';statusEl.textContent='다시 시도해 주세요';
+  }
+  btn.disabled=false;
+}
+
+function renderGrid(gridId,articles,type){
+  if(!articles.length){
+    const msg=type==='col'?'<strong>관련 칼럼 없음</strong>이 키워드와 관련된 칼럼을 찾지 못했어요':'<strong>관련 뉴스 없음</strong>기간을 늘려보세요';
+    document.getElementById(gridId).innerHTML=`<div class="empty"><div class="empty-icon">${type==='col'?'✍️':'📰'}</div><p>${msg}</p></div>`;
+    return;
+  }
+  document.getElementById(gridId).innerHTML=articles.map((a,i)=>`
+    <div class="news-card" style="animation-delay:${i*0.04}s">
+      <div class="card-top">
+        <span class="card-idx">${String(i+1).padStart(2,'0')}</span>
+        <span class="card-source">${a.source}</span>
+      </div>
+      <div class="card-title"><a href="${a.url}" target="_blank" rel="noopener">${a.title}</a></div>
+      ${a.aiSummary?`<div class="card-ai-summary"><span class="ai-badge">AI</span>${a.aiSummary}</div>`:''}
+      <div class="card-date">${a.date}</div>
+    </div>`).join('');
+}
+
+function stripHtml(str){return(str||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();}
+function extractSource(title){const m=(title||'').match(/ - ([^-]+)$/);return m?m[1].trim():'뉴스';}
+function formatDate(dateStr){
+  if(!dateStr)return'';
+  const d=new Date(dateStr);
+  if(isNaN(d))return dateStr;
+  const diff=Math.floor((new Date()-d)/60000);
+  if(diff<60)return`${diff}분 전`;
+  if(diff<1440)return`${Math.floor(diff/60)}시간 전`;
+  return`${d.getMonth()+1}/${d.getDate()}`;
+}
+
+async function summarizeNews(){
+  const headlines=window._lastHeadlines;
+  if(!headlines?.length)return;
+  const btn=document.getElementById('sum-btn');
+  const wrap=document.getElementById('summary-wrap');
+  const body=document.getElementById('summary-body');
+  btn.disabled=true;
+  document.getElementById('sum-keyword').textContent=activeKeyword;
+  body.innerHTML='<span style="color:var(--muted)">AI가 분석 중...</span>';
+  wrap.classList.add('visible');
+  wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+  try{
+    const res=await fetch('/api/summarize',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({headlines:headlines.slice(0,15),keyword:activeKeyword})
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'요약 실패');
+    body.textContent=data.summary;
+  }catch(e){body.textContent='⚠️ 요약 실패: '+e.message;}
+  btn.disabled=false;
+}
+function closeSummary(){
+  document.getElementById('summary-wrap').classList.remove('visible');
+  document.getElementById('summary-body').textContent='';
+}
+
+loadKeywords();
+</script>
+</body>
+</html>
