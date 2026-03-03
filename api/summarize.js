@@ -15,9 +15,9 @@ module.exports = async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API 키 미설정' });
 
-  const today = new Date().toISOString().slice(0, 10); // 2026-03-04
+  const today = new Date().toISOString().slice(0, 10);
 
-  // ── expand: 서버 캐시 (하루 1회) ──────────────
+  // ── expand: 24시간 캐시 ────────────────────────
   if (mode === 'expand') {
     const cacheKey = `expand:${keyword}:${today}`;
     try {
@@ -46,7 +46,6 @@ module.exports = async function handler(req, res) {
       const data = await response.json();
       const text = (data.content?.[0]?.text||'').trim();
       const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
-      // 24시간 캐시 저장
       try { await kv.set(cacheKey, parsed.terms, { ex: 86400 }); } catch(e) {}
       return res.status(200).json(parsed);
     } catch(e) {
@@ -56,9 +55,8 @@ module.exports = async function handler(req, res) {
 
   if (!headlines?.length) return res.status(400).json({ error: 'headlines 필요' });
 
-  // ── filter: 헤드라인 해시로 캐시 ──────────────
+  // ── filter: 6시간 캐시 ────────────────────────
   if (mode === 'filter') {
-    // 헤드라인 목록으로 캐시 키 생성 (앞 5개 제목 해시)
     const hashStr = headlines.slice(0,5).join('|');
     const cacheKey = `filter:${keyword}:${hashStr.slice(0,80)}`;
     try {
@@ -92,15 +90,14 @@ ${list}
       const data = await response.json();
       const text = (data.content?.[0]?.text||'').trim();
       const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
-      // 1시간 캐시
-      try { await kv.set(cacheKey, parsed.results, { ex: 3600 }); } catch(e) {}
+      try { await kv.set(cacheKey, parsed.results, { ex: 21600 }); } catch(e) {}
       return res.status(200).json(parsed);
     } catch(e) {
       return res.status(500).json({ error: 'AI 파싱 실패' });
     }
   }
 
-  // ── 3줄 요약 (캐시 없음, 수동 호출이라 괜찮음) ─
+  // ── 3줄 요약 (수동 호출, 캐시 없음) ─────────────
   const headlineText = headlines.map((h,i)=>`${i+1}. ${h}`).join('\n');
   const prompt = `다음은 "${keyword}" 관련 최신 뉴스/칼럼 헤드라인들입니다.\n\n${headlineText}\n\n위 헤드라인들을 바탕으로:\n1. 핵심 흐름을 3줄로 요약해주세요\n2. 방송영상 입시생이 주목해야 할 핵심 키워드 3개를 뽑아주세요\n\n형식:\n【3줄 요약】\n• (첫 번째)\n• (두 번째)\n• (세 번째)\n\n【핵심 키워드】\n#키워드1 #키워드2 #키워드3`;
 
