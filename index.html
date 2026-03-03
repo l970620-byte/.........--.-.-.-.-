@@ -218,6 +218,60 @@ header {
 }
 .kw-add-btn:hover { opacity: 0.85; }
 
+/* ─── DATE FILTER ─── */
+.date-bar {
+  padding: 0.6rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.date-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.date-chip {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.date-chip:hover { border-color: #555; color: var(--white); }
+.date-chip.active { border-color: var(--yellow); color: var(--yellow); background: rgba(255,224,51,0.07); }
+
+.date-custom {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.date-input {
+  background: var(--gray);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s;
+  color-scheme: dark;
+}
+.date-input:focus { border-color: var(--yellow); }
+
 /* ─── FETCH BUTTON ─── */
 .fetch-bar {
   padding: 0.8rem 1.2rem;
@@ -396,6 +450,74 @@ footer p { font-size: 0.62rem; color: #444; line-height: 1.6; }
   margin-left: 0.4rem;
   vertical-align: middle;
 }
+/* ─── SUMMARY BOX ─── */
+.summary-wrap {
+  margin: 1rem 1.2rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  display: none;
+}
+.summary-wrap.visible { display: block; }
+
+.summary-header {
+  background: rgba(255,224,51,0.08);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.summary-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--yellow);
+  text-transform: uppercase;
+}
+.summary-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+}
+.summary-body {
+  padding: 1rem;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: #ccc;
+  white-space: pre-wrap;
+  min-height: 60px;
+}
+.summary-body .loading-dots::after {
+  content: '...';
+  animation: dots 1s steps(3, end) infinite;
+}
+@keyframes dots {
+  0%   { content: '.'; }
+  33%  { content: '..'; }
+  66%  { content: '...'; }
+}
+.sum-btn {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 0.28rem 0.8rem;
+  border: 1px solid var(--yellow);
+  border-radius: 4px;
+  background: rgba(255,224,51,0.08);
+  color: var(--yellow);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.sum-btn:hover { background: rgba(255,224,51,0.18); }
+.sum-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
 </style>
 </head>
 <body>
@@ -426,11 +548,34 @@ footer p { font-size: 0.62rem; color: #444; line-height: 1.6; }
   </div>
 </div>
 
+<div class="date-bar">
+  <span class="date-label">기간</span>
+  <button class="date-chip active" data-range="1" onclick="setRange(this)">오늘</button>
+  <button class="date-chip" data-range="3" onclick="setRange(this)">3일</button>
+  <button class="date-chip" data-range="7" onclick="setRange(this)">1주일</button>
+  <button class="date-chip" data-range="30" onclick="setRange(this)">1개월</button>
+  <button class="date-chip" data-range="0" onclick="setRange(this)">직접 선택</button>
+  <div class="date-custom" id="date-custom" style="display:none;">
+    <input type="date" class="date-input" id="date-from">
+    <span style="color:var(--muted);font-size:0.7rem;">~</span>
+    <input type="date" class="date-input" id="date-to">
+  </div>
+</div>
+
 <div class="fetch-bar">
   <button class="fetch-btn" id="fetch-btn" onclick="fetchNews()">
     ▶ 뉴스 불러오기
   </button>
+  <button class="sum-btn" id="sum-btn" onclick="summarizeNews()" disabled>✦ AI 요약</button>
   <span id="status-text">키워드를 선택하고 불러오세요</span>
+</div>
+
+<div class="summary-wrap" id="summary-wrap">
+  <div class="summary-header">
+    <span class="summary-title">✦ AI 3줄 브리핑 — <span id="sum-keyword"></span></span>
+    <button class="summary-close" onclick="closeSummary()">✕</button>
+  </div>
+  <div class="summary-body" id="summary-body"></div>
 </div>
 
 <main>
@@ -475,6 +620,40 @@ const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 let keywords = [];
 let activeKeyword = '';
+let activeRange = 1;   // 기본: 오늘 (1일)
+let customFrom = '';
+let customTo = '';
+
+// ── 날짜 필터 ──────────────────────────────────────
+function setRange(btn) {
+  document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  activeRange = parseInt(btn.dataset.range);
+  const customBox = document.getElementById('date-custom');
+  customBox.style.display = activeRange === 0 ? 'flex' : 'none';
+}
+
+function getDateFilter() {
+  if (activeRange === 0) {
+    // 직접 선택
+    const from = document.getElementById('date-from').value;
+    const to   = document.getElementById('date-to').value;
+    if (!from && !to) return '';
+    const f = from ?  : '';
+    const t = to   ?   : '';
+    return [f, t].filter(Boolean).join('+');
+  }
+  if (activeRange === 1) {
+    // 오늘: Google News when=1d
+    return 'when:1d';
+  }
+  // n일 전 ~ 오늘
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - activeRange);
+  const fmt = d => d.toISOString().slice(0,10);
+  return `after:${fmt(from)}+before:${fmt(to)}`;
+}
 
 // ── 키워드 관리 ─────────────────────────────────────
 function loadKeywords() {
@@ -574,6 +753,9 @@ async function fetchNews() {
   try {
     // Google News RSS → rss2json 무료 프록시로 CORS 우회
     const query = encodeURIComponent(activeKeyword);
+    const dateFilter = getDateFilter();
+    const fullQuery = dateFilter ? `${activeKeyword} ${dateFilter}` : activeKeyword;
+    const query = encodeURIComponent(fullQuery);
     const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=ko&gl=KR&ceid=KR:ko`;
     const apiUrl = `${RSS_PROXY}${encodeURIComponent(rssUrl)}&count=10`;
 
@@ -594,7 +776,11 @@ async function fetchNews() {
 
     renderCards(articles);
     statusEl.className = 'live';
-    statusEl.textContent = `${articles.length}건 · ${new Date().toLocaleTimeString('ko-KR')}`;
+    const rangeLabel = activeRange === 0 ? '직접 선택' : activeRange === 1 ? '오늘' : `최근 ${activeRange}일`;
+    statusEl.textContent = `${articles.length}건 · ${rangeLabel} · ${new Date().toLocaleTimeString('ko-KR')}`;
+    document.getElementById('sum-btn').disabled = false;
+    window._lastHeadlines = articles.map(a => a.title);
+    closeSummary();
 
   } catch(err) {
     grid.innerHTML = `<div class="empty">
@@ -643,6 +829,43 @@ function formatDate(dateStr) {
   if (diff < 60) return `${diff}분 전`;
   if (diff < 1440) return `${Math.floor(diff/60)}시간 전`;
   return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+
+// ── AI 요약 ─────────────────────────────────────────
+async function summarizeNews() {
+  const headlines = window._lastHeadlines;
+  if (!headlines?.length) return;
+
+  const btn = document.getElementById('sum-btn');
+  const wrap = document.getElementById('summary-wrap');
+  const body = document.getElementById('summary-body');
+  const kwLabel = document.getElementById('sum-keyword');
+
+  btn.disabled = true;
+  kwLabel.textContent = activeKeyword;
+  body.innerHTML = '<span class="loading-dots">AI가 분석 중</span>';
+  wrap.classList.add('visible');
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  try {
+    const res = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ headlines, keyword: activeKeyword })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '요약 실패');
+    body.textContent = data.summary;
+  } catch(e) {
+    body.textContent = '⚠️ 요약 실패: ' + e.message;
+  }
+  btn.disabled = false;
+}
+
+function closeSummary() {
+  document.getElementById('summary-wrap').classList.remove('visible');
+  document.getElementById('summary-body').textContent = '';
 }
 
 // ── 초기화 ───────────────────────────────────────────
