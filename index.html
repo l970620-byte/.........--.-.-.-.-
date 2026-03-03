@@ -339,12 +339,11 @@ function isKorean(str){return /[가-힣]/.test(str);}
 
 async function fetchRss(url){
   try{
-    const r=await fetch(`${RSS_PROXY}${encodeURIComponent(url)}&count=10`);
+    const r=await fetch(`/api/rss?url=${encodeURIComponent(url)}`);
     const d=await r.json();
-    return(d.status==='ok'&&d.items)?d.items:[];
+    return d.items||[];
   }catch(e){return[];}
 }
-
 async function fetchAll(){
   if(!activeKeyword)return;
   const btn=document.getElementById('fetch-btn');
