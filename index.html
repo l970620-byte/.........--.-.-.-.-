@@ -206,27 +206,26 @@ const KICHUL_SET = new Set([
   "숏폼 콘텐츠","웹툰 드라마화","유튜브 TV화","다큐멘터리",
   "AI 저작권","버추얼 휴먼","예술인 도덕성"
 ]);
-// 뉴스 소스 — 공신력 높은 언론사 문화/방송/IT 분야 RSS
-const NEWS_SOURCES = [
-  // 방송사
-  { url:'https://news.kbs.co.kr/rss/rss.do?catecd=0000', name:'KBS' },
-  { url:'http://imnews.imbc.com/rss/news/news_00.xml', name:'MBC' },
-  { url:'https://news.sbs.co.kr/news/rssVodFeed.do?pmd=News&ctgry=culture', name:'SBS' },
-  // 종합일간지
-  { url:'https://www.khan.co.kr/rss/rssdata/culture.xml', name:'경향신문' },
-  { url:'http://www.hani.co.kr/rss/culture/', name:'한겨레' },
-  { url:'https://www.hankookilbo.com/rss/section/culture', name:'한국일보' },
-  // 통신사
-  { url:'https://www.yonhapnews.co.kr/RSS/culture.xml', name:'연합뉴스' },
-  // IT/과학
-  { url:'https://www.etnews.com/rss/section/section001.xml', name:'전자신문' },
-  { url:'https://zdnet.co.kr/rss/', name:'ZDNet' },
-  // 미디어 전문
+const COLUMN_SOURCES = [
+  // 종합일간지 오피니언/칼럼
+  { url:'http://www.hani.co.kr/rss/opinion/', name:'한겨레' },
+  { url:'https://www.khan.co.kr/rss/rssdata/opinion.xml', name:'경향신문' },
+  { url:'https://www.hankookilbo.com/rss/section/opinion', name:'한국일보' },
+  { url:'http://rss.donga.com/column.xml', name:'동아일보' },
+  { url:'https://www.chosun.com/arc/outboundfeeds/rss/category/opinion/', name:'조선일보' },
+  { url:'https://rss.joins.com/joins_opinion_list.xml', name:'중앙일보' },
+  // 방송/미디어 전문
   { url:'https://www.mediatoday.co.kr/rss/allArticle.xml', name:'미디어오늘' },
   { url:'https://www.pdjournal.com/rss/allArticle.xml', name:'PD저널' },
+  { url:'https://www.mediaus.co.kr/rss/allArticle.xml', name:'미디어스' },
+  // 시사주간지
+  { url:'http://www.sisain.co.kr/rss/allArticle.xml', name:'시사IN' },
+  { url:'http://www.ohmynews.com/rss/ohmynews.xml', name:'오마이뉴스' },
   // 문화/영화
   { url:'https://www.cine21.com/news/rss/', name:'씨네21' },
   { url:'https://www.artinsight.co.kr/rss/rss.php', name:'아트인사이트' },
+  // IT/과학
+  { url:'https://www.etnews.com/rss/section/section001.xml', name:'전자신문' },
 ];
 
 const COLUMN_SOURCES = NEWS_SOURCES; // 칼럼 탭도 동일 소스 활용
