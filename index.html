@@ -7,95 +7,92 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-:root {
-  --bg: #0a0a0a; --red: #ff2d2d; --yellow: #ffe033; --blue: #7bb4ff;
-  --white: #f5f3ee; --gray: #1c1c1c; --muted: #555; --border: #222; --card: #141414;
-}
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--white); font-family: 'Noto Sans KR', sans-serif; font-weight: 300; min-height: 100vh; overflow-x: hidden; }
-header { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 1.2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; }
-.logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.08em; color: var(--white); display: flex; align-items: center; gap: 0.5rem; }
-.logo .on-air { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--red); color: white; font-size: 0.6rem; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 2px; letter-spacing: 0.1em; }
-.on-air-dot { width: 5px; height: 5px; background: white; border-radius: 50%; animation: blink 1.2s infinite; }
+:root { --bg:#0a0a0a; --red:#ff2d2d; --yellow:#ffe033; --blue:#7bb4ff; --white:#f5f3ee; --gray:#1c1c1c; --muted:#555; --border:#222; --card:#141414; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--white); font-family:'Noto Sans KR',sans-serif; font-weight:300; min-height:100vh; overflow-x:hidden; }
+header { position:sticky; top:0; z-index:100; background:var(--bg); border-bottom:1px solid var(--border); padding:0 1.2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
+.logo { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.08em; color:var(--white); display:flex; align-items:center; gap:0.5rem; }
+.logo .on-air { display:inline-flex; align-items:center; gap:0.3rem; background:var(--red); color:white; font-size:0.6rem; font-family:'Noto Sans KR',sans-serif; font-weight:700; padding:0.15rem 0.4rem; border-radius:2px; letter-spacing:0.1em; }
+.on-air-dot { width:5px; height:5px; background:white; border-radius:50%; animation:blink 1.2s infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-#clock { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.1em; color: var(--yellow); }
-.brief-strip { background: var(--gray); border-bottom: 1px solid var(--border); display: flex; align-items: center; overflow-x: auto; scrollbar-width: none; padding: 0 1.2rem; height: 36px; }
+#clock { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:0.1em; color:var(--yellow); }
+.brief-strip { background:var(--gray); border-bottom:1px solid var(--border); display:flex; align-items:center; overflow-x:auto; scrollbar-width:none; padding:0 1.2rem; height:36px; }
 .brief-strip::-webkit-scrollbar { display:none; }
-.brief-label { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; white-space: nowrap; margin-right: 0.8rem; }
-.bt { font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; padding: 0 0.7rem; height: 22px; display: inline-flex; align-items: center; letter-spacing: 0.08em; border: 1px solid var(--border); border-radius: 2px; color: var(--muted); margin-right: 0.4rem; white-space: nowrap; transition: all 0.2s; }
-.bt.done { border-color: #333; color: #444; text-decoration: line-through; }
-.bt.next { border-color: var(--red); color: var(--red); animation: blink 1.2s infinite; }
-.bt.upcoming { border-color: var(--muted); color: var(--muted); }
-.next-label { font-size: 0.6rem; color: var(--muted); white-space: nowrap; margin-left: auto; padding-left: 0.8rem; }
-.next-label span { color: var(--yellow); }
-.section { padding: 1rem 1.2rem 0.6rem; border-bottom: 1px solid var(--border); }
-.section-title { font-size: 0.6rem; letter-spacing: 0.25em; color: var(--muted); text-transform: uppercase; margin-bottom: 0.7rem; }
-.keyword-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.7rem; }
-.kw-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; font-weight: 500; padding: 0.3rem 0.7rem; border: 1px solid var(--border); border-radius: 100px; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-.kw-chip:hover { border-color: #555; color: var(--white); }
-.kw-chip.active { border-color: var(--yellow); color: var(--yellow); background: rgba(255,224,51,0.07); }
-.kw-chip .del-btn { display: none; font-size: 0.7rem; color: var(--red); line-height: 1; }
-.kw-chip:hover .del-btn { display: inline; }
-.kw-add-row { display: flex; gap: 0.5rem; align-items: center; }
-.kw-input { flex: 1; max-width: 200px; background: var(--gray); border: 1px solid var(--border); color: var(--white); font-family: 'Noto Sans KR', sans-serif; font-size: 0.8rem; padding: 0.35rem 0.7rem; border-radius: 100px; outline: none; transition: border-color 0.15s; }
-.kw-input::placeholder { color: var(--muted); }
-.kw-input:focus { border-color: var(--yellow); }
-.kw-add-btn { font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.9rem; background: var(--yellow); color: var(--bg); border: none; border-radius: 100px; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
-.kw-add-btn:hover { opacity: 0.85; }
-.date-bar { padding: 0.6rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.date-label { font-size: 0.6rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; white-space: nowrap; }
-.date-chip { font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 0.08em; padding: 0.25rem 0.85rem; border: 1px solid var(--border); border-radius: 100px; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-.date-chip:hover { border-color: #555; color: var(--white); }
-.date-chip.active { border-color: var(--yellow); color: var(--yellow); background: rgba(255,224,51,0.07); }
-.date-custom { display: none; align-items: center; gap: 0.4rem; width: 100%; margin-top: 0.3rem; padding-left: 0.2rem; }
-.date-custom.show { display: flex; }
-.date-input { background: var(--gray); border: 1px solid var(--border); color: var(--white); font-family: 'Noto Sans KR', sans-serif; font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px; outline: none; transition: border-color 0.15s; color-scheme: dark; }
-.date-input:focus { border-color: var(--yellow); }
-.fetch-bar { padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
-.fetch-btn { flex: 1; min-width: 140px; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.12em; padding: 0.6rem 1.5rem; background: var(--red); color: white; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: opacity 0.2s; }
-.fetch-btn:hover { opacity: 0.85; }
-.fetch-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-#status-text { font-size: 0.72rem; color: var(--muted); flex: 2; }
-#status-text.live { color: var(--yellow); }
-.sum-btn { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; padding: 0.28rem 0.8rem; border: 1px solid var(--yellow); border-radius: 4px; background: rgba(255,224,51,0.08); color: var(--yellow); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-.sum-btn:hover { background: rgba(255,224,51,0.18); }
-.sum-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-main { padding: 1rem 1.2rem 4rem; }
-.news-grid { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
-@media (min-width: 640px) { .news-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .news-grid { grid-template-columns: repeat(3, 1fr); } .news-card:first-child { grid-column: span 2; } }
-.news-card { background: var(--card); padding: 1.4rem; display: flex; flex-direction: column; gap: 0.9rem; animation: fadeUp 0.35s ease both; transition: background 0.15s; }
-.news-card:hover { background: #1a1a1a; }
-@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
-.card-idx { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; line-height: 1; color: var(--border); }
-.news-card:first-child .card-idx { color: var(--red); }
-.card-source { font-size: 0.62rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; text-align: right; line-height: 1.4; }
-.card-title { font-size: 0.95rem; font-weight: 500; line-height: 1.55; }
-.news-card:first-child .card-title { font-size: 1.1rem; }
-.card-title a { color: var(--white); text-decoration: none; }
-.card-title a:hover { color: var(--yellow); }
-.card-date { font-size: 0.68rem; color: var(--muted); }
-.col-badge { display: inline-block; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.1em; padding: 1px 5px; border-radius: 3px; margin-left: 0.4rem; background: rgba(123,180,255,0.12); color: var(--blue); border: 1px solid #4488cc; vertical-align: middle; }
-.skeleton-card { background: var(--card); padding: 1.4rem; display: flex; flex-direction: column; gap: 0.7rem; }
-.skel { background: linear-gradient(90deg, var(--border) 25%, #2a2a2a 50%, var(--border) 75%); background-size: 300% 100%; animation: shimmer 1.4s infinite; border-radius: 3px; height: 12px; }
-.skel.lg { height: 18px; width: 80%; }
-.skel.sm { width: 50%; }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-.empty { grid-column: 1/-1; padding: 4rem 1rem; text-align: center; }
-.empty-icon { font-size: 2.5rem; opacity: 0.2; margin-bottom: 1rem; }
-.empty p { font-size: 0.85rem; color: var(--muted); line-height: 1.8; }
-.empty strong { display: block; color: #666; font-size: 0.95rem; margin-bottom: 0.3rem; font-weight: 500; }
-.error-bar { display: none; margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; background: rgba(255,45,45,0.08); border: 1px solid var(--red); border-radius: 4px; font-size: 0.75rem; color: #ff7777; }
-.summary-wrap { margin: 1rem 1.2rem 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: none; }
-.summary-wrap.visible { display: block; }
-.summary-header { background: rgba(255,224,51,0.08); border-bottom: 1px solid var(--border); padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-.summary-title { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; color: var(--yellow); text-transform: uppercase; }
-.summary-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0; }
-.summary-body { padding: 1rem; font-size: 0.82rem; line-height: 1.7; color: #ccc; white-space: pre-wrap; min-height: 60px; }
-footer { padding: 1.2rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-footer p { font-size: 0.62rem; color: #444; line-height: 1.6; }
-.free-badge { display: inline-block; font-size: 0.55rem; font-weight: 700; background: rgba(80,200,80,0.15); color: #5c5; border: 1px solid #3a3; border-radius: 3px; padding: 1px 5px; letter-spacing: 0.1em; margin-left: 0.4rem; vertical-align: middle; }
+.brief-label { font-size:0.6rem; letter-spacing:0.2em; color:var(--muted); text-transform:uppercase; white-space:nowrap; margin-right:0.8rem; }
+.bt { font-family:'Bebas Neue',sans-serif; font-size:0.85rem; padding:0 0.7rem; height:22px; display:inline-flex; align-items:center; letter-spacing:0.08em; border:1px solid var(--border); border-radius:2px; color:var(--muted); margin-right:0.4rem; white-space:nowrap; transition:all 0.2s; }
+.bt.done { border-color:#333; color:#444; text-decoration:line-through; }
+.bt.next { border-color:var(--red); color:var(--red); animation:blink 1.2s infinite; }
+.bt.upcoming { border-color:var(--muted); color:var(--muted); }
+.next-label { font-size:0.6rem; color:var(--muted); white-space:nowrap; margin-left:auto; padding-left:0.8rem; }
+.next-label span { color:var(--yellow); }
+.section { padding:1rem 1.2rem 0.6rem; border-bottom:1px solid var(--border); }
+.section-title { font-size:0.6rem; letter-spacing:0.25em; color:var(--muted); text-transform:uppercase; margin-bottom:0.7rem; }
+.keyword-list { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem; }
+.kw-chip { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.78rem; font-weight:500; padding:0.3rem 0.7rem; border:1px solid var(--border); border-radius:100px; background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.kw-chip:hover { border-color:#555; color:var(--white); }
+.kw-chip.active { border-color:var(--yellow); color:var(--yellow); background:rgba(255,224,51,0.07); }
+.kw-chip .del-btn { display:none; font-size:0.7rem; color:var(--red); line-height:1; }
+.kw-chip:hover .del-btn { display:inline; }
+.kw-add-row { display:flex; gap:0.5rem; align-items:center; }
+.kw-input { flex:1; max-width:200px; background:var(--gray); border:1px solid var(--border); color:var(--white); font-family:'Noto Sans KR',sans-serif; font-size:0.8rem; padding:0.35rem 0.7rem; border-radius:100px; outline:none; transition:border-color 0.15s; }
+.kw-input::placeholder { color:var(--muted); }
+.kw-input:focus { border-color:var(--yellow); }
+.kw-add-btn { font-size:0.75rem; font-weight:700; padding:0.35rem 0.9rem; background:var(--yellow); color:var(--bg); border:none; border-radius:100px; cursor:pointer; transition:opacity 0.15s; white-space:nowrap; }
+.kw-add-btn:hover { opacity:0.85; }
+.date-bar { padding:0.6rem 1.2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+.date-label { font-size:0.6rem; letter-spacing:0.15em; color:var(--muted); text-transform:uppercase; white-space:nowrap; }
+.date-chip { font-family:'Bebas Neue',sans-serif; font-size:0.85rem; letter-spacing:0.08em; padding:0.25rem 0.85rem; border:1px solid var(--border); border-radius:100px; background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.date-chip:hover { border-color:#555; color:var(--white); }
+.date-chip.active { border-color:var(--yellow); color:var(--yellow); background:rgba(255,224,51,0.07); }
+.date-custom { display:none; align-items:center; gap:0.4rem; width:100%; margin-top:0.3rem; }
+.date-custom.show { display:flex; }
+.date-input { background:var(--gray); border:1px solid var(--border); color:var(--white); font-family:'Noto Sans KR',sans-serif; font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:6px; outline:none; transition:border-color 0.15s; color-scheme:dark; }
+.date-input:focus { border-color:var(--yellow); }
+.fetch-bar { padding:0.8rem 1.2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; }
+.fetch-btn { flex:1; min-width:140px; font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.12em; padding:0.6rem 1.5rem; background:var(--red); color:white; border:none; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.4rem; transition:opacity 0.2s; }
+.fetch-btn:hover { opacity:0.85; }
+.fetch-btn:disabled { opacity:0.35; cursor:not-allowed; }
+#status-text { font-size:0.72rem; color:var(--muted); flex:2; }
+#status-text.live { color:var(--yellow); }
+.sum-btn { font-size:0.7rem; font-weight:600; letter-spacing:0.08em; padding:0.28rem 0.8rem; border:1px solid var(--yellow); border-radius:4px; background:rgba(255,224,51,0.08); color:var(--yellow); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.sum-btn:hover { background:rgba(255,224,51,0.18); }
+.sum-btn:disabled { opacity:0.35; cursor:not-allowed; }
+main { padding:1rem 1.2rem 4rem; }
+.news-grid { display:grid; grid-template-columns:1fr; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+@media (min-width:640px) { .news-grid { grid-template-columns:repeat(2,1fr); } }
+@media (min-width:1024px) { .news-grid { grid-template-columns:repeat(3,1fr); } .news-card:first-child { grid-column:span 2; } }
+.news-card { background:var(--card); padding:1.4rem; display:flex; flex-direction:column; gap:0.9rem; animation:fadeUp 0.35s ease both; transition:background 0.15s; }
+.news-card:hover { background:#1a1a1a; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; }
+.card-idx { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; line-height:1; color:var(--border); }
+.news-card:first-child .card-idx { color:var(--red); }
+.card-source { font-size:0.62rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; text-align:right; line-height:1.4; }
+.card-title { font-size:0.95rem; font-weight:500; line-height:1.55; }
+.news-card:first-child .card-title { font-size:1.1rem; }
+.card-title a { color:var(--white); text-decoration:none; }
+.card-title a:hover { color:var(--yellow); }
+.card-date { font-size:0.68rem; color:var(--muted); }
+.col-badge { display:inline-block; font-size:0.55rem; font-weight:700; letter-spacing:0.1em; padding:1px 5px; border-radius:3px; margin-left:0.4rem; background:rgba(123,180,255,0.12); color:var(--blue); border:1px solid #4488cc; vertical-align:middle; }
+.skeleton-card { background:var(--card); padding:1.4rem; display:flex; flex-direction:column; gap:0.7rem; }
+.skel { background:linear-gradient(90deg,var(--border) 25%,#2a2a2a 50%,var(--border) 75%); background-size:300% 100%; animation:shimmer 1.4s infinite; border-radius:3px; height:12px; }
+.skel.lg { height:18px; width:80%; }
+.skel.sm { width:50%; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.empty { grid-column:1/-1; padding:4rem 1rem; text-align:center; }
+.empty-icon { font-size:2.5rem; opacity:0.2; margin-bottom:1rem; }
+.empty p { font-size:0.85rem; color:var(--muted); line-height:1.8; }
+.empty strong { display:block; color:#666; font-size:0.95rem; margin-bottom:0.3rem; font-weight:500; }
+.error-bar { display:none; margin-bottom:0.8rem; padding:0.6rem 0.9rem; background:rgba(255,45,45,0.08); border:1px solid var(--red); border-radius:4px; font-size:0.75rem; color:#ff7777; }
+.summary-wrap { margin:1rem 1.2rem 0; border:1px solid var(--border); border-radius:8px; overflow:hidden; display:none; }
+.summary-wrap.visible { display:block; }
+.summary-header { background:rgba(255,224,51,0.08); border-bottom:1px solid var(--border); padding:0.5rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
+.summary-title { font-size:0.65rem; font-weight:700; letter-spacing:0.15em; color:var(--yellow); text-transform:uppercase; }
+.summary-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; line-height:1; padding:0; }
+.summary-body { padding:1rem; font-size:0.82rem; line-height:1.7; color:#ccc; white-space:pre-wrap; min-height:60px; }
+footer { padding:1.2rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; }
+footer p { font-size:0.62rem; color:#444; line-height:1.6; }
+.free-badge { display:inline-block; font-size:0.55rem; font-weight:700; background:rgba(80,200,80,0.15); color:#5c5; border:1px solid #3a3; border-radius:3px; padding:1px 5px; letter-spacing:0.1em; margin-left:0.4rem; vertical-align:middle; }
 </style>
 </head>
 <body>
@@ -185,149 +182,195 @@ const KICHUL_SET = new Set([
   "AI 저작권","버추얼 휴먼","예술인 도덕성"
 ]);
 const COLUMN_SOURCES = [
-  { url: 'https://www.mediatoday.co.kr/rss/allArticle.xml', name: '미디어오늘' },
-  { url: 'http://www.hani.co.kr/rss/opinion/', name: '한겨레 오피니언' },
-  { url: 'https://www.cine21.com/news/rss/', name: '씨네21' },
-  { url: 'https://www.artinsight.co.kr/rss/rss.php', name: '아트인사이트' }
+  { url:'https://www.mediatoday.co.kr/rss/allArticle.xml', name:'미디어오늘' },
+  { url:'http://www.hani.co.kr/rss/opinion/', name:'한겨레 오피니언' },
+  { url:'https://www.cine21.com/news/rss/', name:'씨네21' },
+  { url:'https://www.artinsight.co.kr/rss/rss.php', name:'아트인사이트' }
 ];
 const STORAGE_KEY = 'news_keywords_v3';
-const BRIEFING_HOURS = [8, 12, 18];
+const BRIEFING_HOURS = [8,12,18];
 const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
-let keywords = [], activeKeyword = '', activeDays = 1;
+let keywords=[], activeKeyword='', activeDays=1;
 
 function setRange(btn) {
-  document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.date-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
   activeDays = parseInt(btn.dataset.days);
   const box = document.getElementById('date-custom');
-  activeDays === 0 ? box.classList.add('show') : box.classList.remove('show');
+  activeDays===0 ? box.classList.add('show') : box.classList.remove('show');
 }
-
 function getDateFilter() {
-  if (activeDays === 0) {
-    const from = document.getElementById('date-from').value;
-    const to   = document.getElementById('date-to').value;
-    if (!from && !to) return '';
-    return [from ? `after:${from}` : '', to ? `before:${to}` : ''].filter(Boolean).join('+');
+  if (activeDays===0) {
+    const from=document.getElementById('date-from').value;
+    const to=document.getElementById('date-to').value;
+    if (!from&&!to) return '';
+    return [from?`after:${from}`:'', to?`before:${to}`:''].filter(Boolean).join('+');
   }
   return `when:${activeDays}d`;
 }
-
 function getRangeLabel() {
-  const map = {1:'1DAY', 7:'7일', 30:'1달', 365:'1년', 0:'직접 지정'};
-  return map[activeDays] || `${activeDays}일`;
+  return {1:'1DAY',7:'7일',30:'1달',365:'1년',0:'직접 지정'}[activeDays]||`${activeDays}일`;
 }
 
 function loadKeywords() {
-  try { const s = localStorage.getItem(STORAGE_KEY); keywords = s ? JSON.parse(s) : [...DEFAULT_KEYWORDS]; }
-  catch(e) { keywords = [...DEFAULT_KEYWORDS]; }
-  if (!keywords.length) keywords = [...DEFAULT_KEYWORDS];
-  activeKeyword = keywords[0];
-  renderKeywords();
+  try { const s=localStorage.getItem(STORAGE_KEY); keywords=s?JSON.parse(s):[...DEFAULT_KEYWORDS]; }
+  catch(e) { keywords=[...DEFAULT_KEYWORDS]; }
+  if (!keywords.length) keywords=[...DEFAULT_KEYWORDS];
+  activeKeyword=keywords[0]; renderKeywords();
 }
-function saveKeywords() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(keywords)); } catch(e) {} }
+function saveKeywords() { try{localStorage.setItem(STORAGE_KEY,JSON.stringify(keywords));}catch(e){} }
 function renderKeywords() {
   document.getElementById('kw-list').innerHTML = keywords.map(kw => {
-    const badge = KICHUL_SET.has(kw) ? `<span style="font-size:0.58rem;background:rgba(255,224,51,0.18);color:var(--yellow);border-radius:3px;padding:0 4px;font-weight:700;margin-left:2px;">기출</span>` : '';
+    const badge = KICHUL_SET.has(kw)?`<span style="font-size:0.58rem;background:rgba(255,224,51,0.18);color:var(--yellow);border-radius:3px;padding:0 4px;font-weight:700;margin-left:2px;">기출</span>`:'';
     return `<button class="kw-chip ${kw===activeKeyword?'active':''}" onclick="selectKw('${kw.replace(/'/g,"\\'")}')">
       ${kw}${badge}<span class="del-btn" onclick="delKw(event,'${kw.replace(/'/g,"\\'")}')">✕</span>
     </button>`;
   }).join('');
 }
-function selectKw(kw) { activeKeyword = kw; renderKeywords(); }
-function delKw(e, kw) {
+function selectKw(kw){activeKeyword=kw;renderKeywords();}
+function delKw(e,kw){
   e.stopPropagation();
-  keywords = keywords.filter(k => k !== kw);
-  if (activeKeyword === kw) activeKeyword = keywords[0] || '';
-  saveKeywords(); renderKeywords();
+  keywords=keywords.filter(k=>k!==kw);
+  if(activeKeyword===kw) activeKeyword=keywords[0]||'';
+  saveKeywords();renderKeywords();
 }
-function addKeyword() {
-  const input = document.getElementById('kw-input');
-  const val = input.value.trim();
-  if (!val || keywords.includes(val)) { input.value=''; return; }
-  keywords.push(val); activeKeyword = val;
-  saveKeywords(); renderKeywords(); input.value='';
+function addKeyword(){
+  const input=document.getElementById('kw-input');
+  const val=input.value.trim();
+  if(!val||keywords.includes(val)){input.value='';return;}
+  keywords.push(val);activeKeyword=val;
+  saveKeywords();renderKeywords();input.value='';
 }
-document.getElementById('kw-input').addEventListener('keydown', e => { if (e.key==='Enter') addKeyword(); });
+document.getElementById('kw-input').addEventListener('keydown',e=>{if(e.key==='Enter')addKeyword();});
 
-function tick() {
-  const now = new Date(), pad = n => String(n).padStart(2,'0');
-  document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-  const h = now.getHours(), ids = {8:'bt-8',12:'bt-12',18:'bt-18'};
-  let nextStr = null;
-  BRIEFING_HOURS.forEach(bh => {
-    const el = document.getElementById(ids[bh]);
-    if (h > bh) el.className='bt done';
-    else if (h===bh) el.className='bt next';
-    else { el.className='bt upcoming'; if (!nextStr) nextStr=`${pad(bh)}:00`; }
+function tick(){
+  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  document.getElementById('clock').textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const h=now.getHours(),ids={8:'bt-8',12:'bt-12',18:'bt-18'};
+  let nextStr=null;
+  BRIEFING_HOURS.forEach(bh=>{
+    const el=document.getElementById(ids[bh]);
+    if(h>bh) el.className='bt done';
+    else if(h===bh) el.className='bt next';
+    else{el.className='bt upcoming';if(!nextStr)nextStr=`${pad(bh)}:00`;}
   });
-  document.getElementById('next-brief').textContent = nextStr || '내일 08:00';
-  if (now.getMinutes()===0 && now.getSeconds()===0 && BRIEFING_HOURS.includes(h)) fetchNews();
+  document.getElementById('next-brief').textContent=nextStr||'내일 08:00';
+  if(now.getMinutes()===0&&now.getSeconds()===0&&BRIEFING_HOURS.includes(h))fetchNews();
 }
-setInterval(tick, 1000); tick();
+setInterval(tick,1000);tick();
 
-async function fetchNews() {
-  if (!activeKeyword) return;
-  const btn = document.getElementById('fetch-btn');
-  const grid = document.getElementById('news-grid');
-  const statusEl = document.getElementById('status-text');
-  const errorBar = document.getElementById('error-bar');
-  btn.disabled = true;
-  errorBar.style.display = 'none';
-  statusEl.className = 'live';
-  statusEl.textContent = `"${activeKeyword}" 검색 중...`;
-  grid.innerHTML = Array(6).fill('').map(() => `<div class="skeleton-card"><div class="skel sm"></div><div class="skel lg"></div><div class="skel"></div><div class="skel sm"></div></div>`).join('');
+async function fetchRss(url) {
+  try {
+    const r = await fetch(`${RSS_PROXY}${encodeURIComponent(url)}&count=10`);
+    const d = await r.json();
+    return (d.status==='ok' && d.items) ? d.items : [];
+  } catch(e) { return []; }
+}
+
+async function fetchNews(){
+  if(!activeKeyword) return;
+  const btn=document.getElementById('fetch-btn');
+  const grid=document.getElementById('news-grid');
+  const statusEl=document.getElementById('status-text');
+  const errorBar=document.getElementById('error-bar');
+  btn.disabled=true;
+  errorBar.style.display='none';
+  statusEl.className='live';
+  statusEl.textContent=`"${activeKeyword}" 검색 중...`;
+  grid.innerHTML=Array(9).fill('').map(()=>`<div class="skeleton-card"><div class="skel sm"></div><div class="skel lg"></div><div class="skel"></div><div class="skel sm"></div></div>`).join('');
+
   try {
     const dateFilter = getDateFilter();
-    const fullQuery = dateFilter ? `${activeKeyword} ${dateFilter}` : activeKeyword;
-    const newsRss = `https://news.google.com/rss/search?q=${encodeURIComponent(fullQuery)}&hl=ko&gl=KR&ceid=KR:ko`;
-    const newsUrl = `${RSS_PROXY}${encodeURIComponent(newsRss)}&count=10`;
-    const colPromises = COLUMN_SOURCES.map(src =>
-      fetch(`${RSS_PROXY}${encodeURIComponent(src.url)}&count=30`)
-        .then(r => r.json()).then(d => ({d, name: src.name})).catch(() => null)
+    const q = dateFilter ? `${activeKeyword} ${dateFilter}` : activeKeyword;
+
+    // 뉴스 3번 병렬 호출 (토픽 변형으로 다양성 확보)
+    const newsQueries = [
+      q,
+      `${activeKeyword} 뉴스 ${dateFilter}`.trim(),
+      `${activeKeyword} 최신 ${dateFilter}`.trim()
+    ];
+    const newsPromises = newsQueries.map(nq =>
+      fetchRss(`https://news.google.com/rss/search?q=${encodeURIComponent(nq)}&hl=ko&gl=KR&ceid=KR:ko`)
     );
-    const [newsData, ...colResults] = await Promise.all([fetch(newsUrl).then(r=>r.json()), ...colPromises]);
-    if (newsData.status !== 'ok' || !newsData.items?.length)
+
+    // 칼럼 4개 병렬 호출
+    const colPromises = COLUMN_SOURCES.map(src =>
+      fetch(`${RSS_PROXY}${encodeURIComponent(src.url)}&count=50`)
+        .then(r=>r.json()).then(d=>({d,name:src.name})).catch(()=>null)
+    );
+
+    const [newsResults, colResults] = await Promise.all([
+      Promise.all(newsPromises),
+      Promise.all(colPromises)
+    ]);
+
+    // 뉴스 중복 제거
+    const seenUrls = new Set();
+    const seenTitles = new Set();
+    let newsArticles = [];
+    for (const items of newsResults) {
+      for (const item of items) {
+        const title = stripHtml(item.title);
+        const url = item.link;
+        if (seenUrls.has(url) || seenTitles.has(title)) continue;
+        seenUrls.add(url); seenTitles.add(title);
+        newsArticles.push({
+          title, url,
+          source: item.author || extractSource(item.title),
+          date: formatDate(item.pubDate),
+          type: 'news'
+        });
+      }
+    }
+
+    if (!newsArticles.length)
       throw new Error('검색 결과가 없습니다. 기간을 늘려보세요.');
-    const newsArticles = newsData.items.slice(0,7).map(item => ({
-      title: stripHtml(item.title), url: item.link,
-      source: item.author || extractSource(item.title),
-      date: formatDate(item.pubDate), type: 'news'
-    }));
-    const kwWords = activeKeyword.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+
+    // 칼럼 키워드 매칭
+    const kwWords = activeKeyword.toLowerCase().split(/\s+/).filter(w=>w.length>1);
     let columnArticles = [];
     for (const result of colResults) {
-      if (!result || result.d?.status !== 'ok' || !result.d.items) continue;
+      if (!result||result.d?.status!=='ok'||!result.d.items) continue;
       const matched = result.d.items.filter(item => {
         const t = stripHtml(item.title||'').toLowerCase();
         const desc = stripHtml(item.description||'').toLowerCase();
-        return kwWords.some(w => t.includes(w) || desc.includes(w));
-      }).slice(0,2).map(item => ({
-        title: stripHtml(item.title), url: item.link, source: result.name,
-        date: formatDate(item.pubDate), type: 'column'
+        return kwWords.some(w=>t.includes(w)||desc.includes(w));
+      }).map(item => ({
+        title: stripHtml(item.title), url: item.link,
+        source: result.name, date: formatDate(item.pubDate), type: 'column'
       }));
       columnArticles = columnArticles.concat(matched);
     }
-    const articles = [...newsArticles, ...columnArticles.slice(0,4)];
+
+    // 칼럼 중복 제거
+    columnArticles = columnArticles.filter(a => {
+      if (seenUrls.has(a.url)||seenTitles.has(a.title)) return false;
+      seenUrls.add(a.url); seenTitles.add(a.title);
+      return true;
+    });
+
+    const articles = [...newsArticles, ...columnArticles];
+
     renderCards(articles);
-    statusEl.className = 'live';
-    const colLabel = columnArticles.length > 0 ? ` · 칼럼 ${Math.min(columnArticles.length,4)}건` : '';
-    statusEl.textContent = `뉴스 ${newsArticles.length}건${colLabel} · ${getRangeLabel()} · ${new Date().toLocaleTimeString('ko-KR')}`;
-    document.getElementById('sum-btn').disabled = false;
-    window._lastHeadlines = articles.map(a => a.title);
+    statusEl.className='live';
+    const colLabel = columnArticles.length>0 ? ` · 칼럼 ${columnArticles.length}건` : '';
+    statusEl.textContent=`뉴스 ${newsArticles.length}건${colLabel} · ${getRangeLabel()} · ${new Date().toLocaleTimeString('ko-KR')}`;
+    document.getElementById('sum-btn').disabled=false;
+    window._lastHeadlines=articles.map(a=>a.title);
     closeSummary();
-  } catch(err) {
-    grid.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p><strong>불러오기 실패</strong>${err.message}</p></div>`;
-    errorBar.textContent = '오류: ' + err.message;
-    errorBar.style.display = 'block';
-    statusEl.className = ''; statusEl.textContent = '다시 시도해 주세요';
+
+  } catch(err){
+    grid.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><p><strong>불러오기 실패</strong>${err.message}</p></div>`;
+    errorBar.textContent='오류: '+err.message;
+    errorBar.style.display='block';
+    statusEl.className='';statusEl.textContent='다시 시도해 주세요';
   }
-  btn.disabled = false;
+  btn.disabled=false;
 }
 
-function renderCards(articles) {
-  document.getElementById('news-grid').innerHTML = articles.map((a,i) => `
-    <div class="news-card" style="animation-delay:${i*0.06}s">
+function renderCards(articles){
+  document.getElementById('news-grid').innerHTML=articles.map((a,i)=>`
+    <div class="news-card" style="animation-delay:${i*0.04}s">
       <div class="card-top">
         <span class="card-idx">${String(i+1).padStart(2,'0')}</span>
         <span class="card-source">${a.source}${a.type==='column'?'<span class="col-badge">COLUMN</span>':''}</span>
@@ -337,46 +380,44 @@ function renderCards(articles) {
     </div>`).join('');
 }
 
-function stripHtml(str) {
-  return (str||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
-}
-function extractSource(title) { const m=(title||'').match(/ - ([^-]+)$/); return m?m[1].trim():'뉴스'; }
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d)) return dateStr;
-  const diff = Math.floor((new Date()-d)/60000);
-  if (diff < 60) return `${diff}분 전`;
-  if (diff < 1440) return `${Math.floor(diff/60)}시간 전`;
-  return `${d.getMonth()+1}/${d.getDate()}`;
+function stripHtml(str){return(str||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();}
+function extractSource(title){const m=(title||'').match(/ - ([^-]+)$/);return m?m[1].trim():'뉴스';}
+function formatDate(dateStr){
+  if(!dateStr)return'';
+  const d=new Date(dateStr);
+  if(isNaN(d))return dateStr;
+  const diff=Math.floor((new Date()-d)/60000);
+  if(diff<60)return`${diff}분 전`;
+  if(diff<1440)return`${Math.floor(diff/60)}시간 전`;
+  return`${d.getMonth()+1}/${d.getDate()}`;
 }
 
-async function summarizeNews() {
-  const headlines = window._lastHeadlines;
-  if (!headlines?.length) return;
-  const btn = document.getElementById('sum-btn');
-  const wrap = document.getElementById('summary-wrap');
-  const body = document.getElementById('summary-body');
-  btn.disabled = true;
-  document.getElementById('sum-keyword').textContent = activeKeyword;
-  body.innerHTML = '<span style="color:var(--muted)">AI가 분석 중...</span>';
+async function summarizeNews(){
+  const headlines=window._lastHeadlines;
+  if(!headlines?.length)return;
+  const btn=document.getElementById('sum-btn');
+  const wrap=document.getElementById('summary-wrap');
+  const body=document.getElementById('summary-body');
+  btn.disabled=true;
+  document.getElementById('sum-keyword').textContent=activeKeyword;
+  body.innerHTML='<span style="color:var(--muted)">AI가 분석 중...</span>';
   wrap.classList.add('visible');
-  wrap.scrollIntoView({behavior:'smooth', block:'nearest'});
-  try {
-    const res = await fetch('/api/summarize', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({headlines, keyword: activeKeyword})
+  wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+  try{
+    const res=await fetch('/api/summarize',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({headlines:headlines.slice(0,15),keyword:activeKeyword})
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || '요약 실패');
-    body.textContent = data.summary;
-  } catch(e) { body.textContent = '⚠️ 요약 실패: ' + e.message; }
-  btn.disabled = false;
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'요약 실패');
+    body.textContent=data.summary;
+  }catch(e){body.textContent='⚠️ 요약 실패: '+e.message;}
+  btn.disabled=false;
 }
-function closeSummary() {
+function closeSummary(){
   document.getElementById('summary-wrap').classList.remove('visible');
-  document.getElementById('summary-body').textContent = '';
+  document.getElementById('summary-body').textContent='';
 }
 
 loadKeywords();
