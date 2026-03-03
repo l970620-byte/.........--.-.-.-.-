@@ -426,8 +426,8 @@ async function fetchAll(){
 
     // 언론사 RSS — 키워드 매칭
     for(const result of newsSourceResults){
-      if(!result||result.d?.status!=='ok'||!result.d.items)continue;
-      const matched=result.d.items.filter(item=>{
+      if(!result||!result.items?.length)continue;
+      const matched=result.items.filter(item=>{
         const t=stripHtml(item.title||'');
         if(!isKorean(t))return false;
         const tl=t.toLowerCase();
@@ -446,8 +446,8 @@ async function fetchAll(){
     // ── 5단계: 칼럼 키워드 매칭 ─────────────────
     let columnArticles=[];
     for(const result of colResults){
-      if(!result||result.d?.status!=='ok'||!result.d.items)continue;
-      const matched=result.d.items.filter(item=>{
+     if(!result||!result.items?.length)continue;
+      const matched=result.items.filter(item=>{
         const t=stripHtml(item.title||'');
         if(!isKorean(t))return false;
         const tl=t.toLowerCase();
