@@ -363,17 +363,25 @@ async function fetchAll(){
     const dateFilter=getDateFilter();
 
     // ── 1단계: AI 연관 검색어 생성 ──────────────
-    let relatedTerms=[];
+   let relatedTerms=[];
     try{
-      const termRes=await fetch('/api/summarize',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({mode:'expand',keyword:activeKeyword})
-      });
-      const termData=await termRes.json();
-      if(termData.terms) relatedTerms=termData.terms.slice(0,6);
+      const cacheKey=`expand_${activeKeyword}_${new Date().toDateString()}`;
+      const cached=localStorage.getItem(cacheKey);
+      if(cached){
+        relatedTerms=JSON.parse(cached);
+      } else {
+        const termRes=await fetch('/api/summarize',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({mode:'expand',keyword:activeKeyword})
+        });
+        const termData=await termRes.json();
+        if(termData.terms){
+          relatedTerms=termData.terms.slice(0,10);
+          localStorage.setItem(cacheKey,JSON.stringify(relatedTerms));
+        }
+      }
     }catch(e){}
-
     statusEl.textContent=`뉴스 검색 중... (연관어: ${relatedTerms.join(', ')||'없음'})`;
 
     // ── 2단계: 뉴스 쿼리 — 기본 + AI 연관어 ────
