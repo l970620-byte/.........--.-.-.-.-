@@ -393,12 +393,12 @@ async function fetchAll(){
 
     // ── 3단계: 언론사 RSS 병렬 ───────────────────
     const newsSourcePromises=NEWS_SOURCES.map(src=>
-      fetch(`${RSS_PROXY}${encodeURIComponent(src.url)}&count=30`)
-        .then(r=>r.json()).then(d=>({d,name:src.name})).catch(()=>null)
+      fetch(`/api/rss?url=${encodeURIComponent(src.url)}`)
+        .then(r=>r.json()).then(d=>({items:d.items||[],name:src.name})).catch(()=>null)
     );
     const colSourcePromises=COLUMN_SOURCES.map(src=>
-      fetch(`${RSS_PROXY}${encodeURIComponent(src.url)}&count=50`)
-        .then(r=>r.json()).then(d=>({d,name:src.name})).catch(()=>null)
+      fetch(`/api/rss?url=${encodeURIComponent(src.url)}`)
+        .then(r=>r.json()).then(d=>({items:d.items||[],name:src.name})).catch(()=>null)
     );
 
     const [newsResults,newsSourceResults,colResults]=await Promise.all([
