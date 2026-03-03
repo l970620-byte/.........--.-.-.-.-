@@ -450,6 +450,7 @@ footer p { font-size: 0.62rem; color: #444; line-height: 1.6; }
   margin-left: 0.4rem;
   vertical-align: middle;
 }
+
 /* ─── SUMMARY BOX ─── */
 .summary-wrap {
   margin: 1rem 1.2rem 0;
@@ -517,7 +518,6 @@ footer p { font-size: 0.62rem; color: #444; line-height: 1.6; }
 }
 .sum-btn:hover { background: rgba(255,224,51,0.18); }
 .sum-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
 </style>
 </head>
 <body>
@@ -594,13 +594,10 @@ footer p { font-size: 0.62rem; color: #444; line-height: 1.6; }
 </footer>
 
 <script>
-// ── 기본 키워드 (기출 분석 + 2026 예상) ─────────────────
 const DEFAULT_KEYWORDS = [
-  // ★ 기출 직결
   "OTT 플랫폼", "공영방송 수신료", "방송 보편적 접근성", "토종 OTT",
   "숏폼 콘텐츠", "웹툰 드라마화", "유튜브 TV화", "다큐멘터리",
   "AI 저작권", "버추얼 휴먼", "예술인 도덕성",
-  // ◎ 2026 예상
   "K콘텐츠 글로벌화", "방송 광고 시장", "1인 미디어 규제",
   "AI 방송 제작", "크리에이터 경제", "미디어 리터러시",
   "MZ 미디어", "방송 콘텐츠 다양성", "라이브 스트리밍"
@@ -614,40 +611,30 @@ const KICHUL_SET = new Set([
 
 const STORAGE_KEY = 'news_keywords_v3';
 const BRIEFING_HOURS = [8, 12, 18];
-
-// RSS 프록시 (CORS 우회, 완전 무료)
 const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 let keywords = [];
 let activeKeyword = '';
-let activeRange = 1;   // 기본: 오늘 (1일)
-let customFrom = '';
-let customTo = '';
+let activeRange = 1;
 
 // ── 날짜 필터 ──────────────────────────────────────
 function setRange(btn) {
   document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   activeRange = parseInt(btn.dataset.range);
-  const customBox = document.getElementById('date-custom');
-  customBox.style.display = activeRange === 0 ? 'flex' : 'none';
+  document.getElementById('date-custom').style.display = activeRange === 0 ? 'flex' : 'none';
 }
 
 function getDateFilter() {
   if (activeRange === 0) {
-    // 직접 선택
     const from = document.getElementById('date-from').value;
     const to   = document.getElementById('date-to').value;
     if (!from && !to) return '';
-    const f = from ?  : '';
-    const t = to   ?   : '';
+    const f = from ? `after:${from}` : '';
+    const t = to   ? `before:${to}`  : '';
     return [f, t].filter(Boolean).join('+');
   }
-  if (activeRange === 1) {
-    // 오늘: Google News when=1d
-    return 'when:1d';
-  }
-  // n일 전 ~ 오늘
+  if (activeRange === 1) return 'when:1d';
   const to = new Date();
   const from = new Date();
   from.setDate(from.getDate() - activeRange);
@@ -660,9 +647,7 @@ function loadKeywords() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     keywords = saved ? JSON.parse(saved) : [...DEFAULT_KEYWORDS];
-  } catch(e) {
-    keywords = [...DEFAULT_KEYWORDS];
-  }
+  } catch(e) { keywords = [...DEFAULT_KEYWORDS]; }
   if (!keywords.length) keywords = [...DEFAULT_KEYWORDS];
   activeKeyword = keywords[0];
   renderKeywords();
@@ -720,18 +705,17 @@ function tick() {
   let nextStr = null;
   BRIEFING_HOURS.forEach(bh => {
     const el = document.getElementById(ids[bh]);
-    if (h > bh)       el.className = 'bt done';
+    if (h > bh)        el.className = 'bt done';
     else if (h === bh) el.className = 'bt next';
     else { el.className = 'bt upcoming'; if (!nextStr) nextStr = `${pad(bh)}:00`; }
   });
   document.getElementById('next-brief').textContent = nextStr || '내일 08:00';
-
   if (now.getMinutes()===0 && now.getSeconds()===0 && BRIEFING_HOURS.includes(h)) fetchNews();
 }
 setInterval(tick, 1000);
 tick();
 
-// ── 뉴스 불러오기 (Google News RSS, 완전 무료) ─────────
+// ── 뉴스 불러오기 ────────────────────────────────────
 async function fetchNews() {
   if (!activeKeyword) return;
   const btn = document.getElementById('fetch-btn');
@@ -751,8 +735,6 @@ async function fetchNews() {
     </div>`).join('');
 
   try {
-    // Google News RSS → rss2json 무료 프록시로 CORS 우회
-    const query = encodeURIComponent(activeKeyword);
     const dateFilter = getDateFilter();
     const fullQuery = dateFilter ? `${activeKeyword} ${dateFilter}` : activeKeyword;
     const query = encodeURIComponent(fullQuery);
@@ -815,7 +797,6 @@ function stripHtml(str) {
 }
 
 function extractSource(title) {
-  // Google News 제목 끝에 "- 출처명" 형태
   const m = title.match(/ - ([^-]+)$/);
   return m ? m[1].trim() : '뉴스';
 }
@@ -825,12 +806,11 @@ function formatDate(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d)) return dateStr;
   const now = new Date();
-  const diff = Math.floor((now - d) / 60000); // 분
+  const diff = Math.floor((now - d) / 60000);
   if (diff < 60) return `${diff}분 전`;
   if (diff < 1440) return `${Math.floor(diff/60)}시간 전`;
   return `${d.getMonth()+1}/${d.getDate()}`;
 }
-
 
 // ── AI 요약 ─────────────────────────────────────────
 async function summarizeNews() {
