@@ -6,12 +6,54 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   const { mode, headlines, descriptions, keyword } = req.body;
-  if (!headlines?.length) return res.status(400).json({ error: 'headlines 필요' });
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API 키 미설정' });
 
   let prompt;
 
+  // ── 연관 검색어 확장 ──────────────────────────
+  if (mode === 'expand') {
+    prompt = `방송영상 전공 입시 뉴스 검색 도우미입니다.
+키워드: "${keyword}"
+
+이 키워드로 한국 뉴스를 검색할 때 실제 기사에서 쓰이는 표현으로
+연관 검색어 6개를 만들어주세요.
+
+조건:
+- 실제 뉴스 기사 제목에서 자주 쓰이는 표현
+- 키워드의 하위 개념, 관련 기업/서비스명, 관련 이슈
+- 2~5글자 핵심 단어 위주
+- 한국어만
+
+응답 형식 (JSON만, 다른 말 없이):
+{"terms":["검색어1","검색어2","검색어3","검색어4","검색어5","검색어6"]}`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 200,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+      const data = await response.json();
+      const text = (data.content?.[0]?.text || '').trim();
+      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+      return res.status(200).json(parsed);
+    } catch(e) {
+      return res.status(200).json({ terms: [] });
+    }
+  }
+
+  if (!headlines?.length) return res.status(400).json({ error: 'headlines 필요' });
+
+  // ── AI 필터링 ─────────────────────────────────
   if (mode === 'filter') {
     const list = headlines.map((h, i) => {
       const desc = descriptions?.[i] ? ` / ${descriptions[i].slice(0, 80)}` : '';
@@ -35,7 +77,9 @@ ${list}
 {"results":[{"idx":0,"relevant":true,"summary":"한 줄 요약"},{"idx":1,"relevant":false,"summary":""},...]}
 
 모든 항목에 대해 빠짐없이 응답하세요.`;
+
   } else {
+    // ── 3줄 요약 ───────────────────────────────
     const headlineText = headlines.map((h, i) => `${i + 1}. ${h}`).join('\n');
     prompt = `다음은 "${keyword}" 관련 최신 뉴스/칼럼 헤드라인들입니다.
 
@@ -69,15 +113,12 @@ ${headlineText}
         messages: [{ role: 'user', content: prompt }],
       }),
     });
-
     if (!response.ok) {
       const err = await response.json();
       return res.status(500).json({ error: err.error?.message || '요청 실패' });
     }
-
     const data = await response.json();
     const text = (data.content?.[0]?.text || '').trim();
-
     if (mode === 'filter') {
       try {
         const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
