@@ -7,90 +7,43 @@ module.exports = async function handler(req, res) {
 
   const { mode, headlines, descriptions, keyword } = req.body;
   if (!headlines?.length) return res.status(400).json({ error: 'headlines 필요' });
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  
+  // Vercel 설정에서 넣을 이름입니다.
+  const apiKey = process.env.GEMINI_API_KEY; 
   if (!apiKey) return res.status(500).json({ error: 'API 키 미설정' });
 
   let prompt;
-
   if (mode === 'filter') {
     const list = headlines.map((h, i) => {
       const desc = descriptions?.[i] ? ` / ${descriptions[i].slice(0, 80)}` : '';
       return `[${i}] ${h}${desc}`;
     }).join('\n');
-
-    prompt = `당신은 방송영상 전공 입시 전문 큐레이터입니다.
-키워드: "${keyword}"
-
-아래 기사/칼럼 목록을 보고 판단하세요.
-
-${list}
-
-판단 기준:
-1. 한국어 기사/칼럼인지 (제목에 한글 포함 필수)
-2. "${keyword}"와 실질적으로 관련 있는지
-   - 직접: 해당 키워드·하위 개념을 다루는 것
-   - 간접: 미디어·방송·OTT·콘텐츠 산업 맥락에서 연관된 것
-   - 제외: 완전 무관한 연예·스포츠·정치·경제 일반 뉴스
-
-응답 형식 (JSON만, 다른 말 없이):
-{"results":[{"idx":0,"relevant":true,"summary":"한 줄 요약"},{"idx":1,"relevant":false,"summary":""},...]}
-
-모든 항목에 대해 빠짐없이 응답하세요.`;
-
+    prompt = `당신은 방송영상 전공 입시 전문 큐레이터입니다. 키워드: "${keyword}". 아래 목록을 보고 "${keyword}"와 관련된 한국어 기사만 골라주세요. 응답은 무조건 JSON 형식으로만 하세요: {"results":[{"idx":0,"relevant":true,"summary":"한 줄 요약"}]}\n\n${list}`;
   } else {
     const headlineText = headlines.map((h, i) => `${i + 1}. ${h}`).join('\n');
-    prompt = `다음은 "${keyword}" 관련 최신 뉴스/칼럼 헤드라인들입니다.
-
-${headlineText}
-
-위 헤드라인들을 바탕으로:
-1. 핵심 흐름을 3줄로 요약해주세요
-2. 방송영상 입시생이 주목해야 할 핵심 키워드 3개를 뽑아주세요
-
-형식:
-【3줄 요약】
-- (첫 번째)
-- (두 번째)
-- (세 번째)
-
-【핵심 키워드】
-#키워드1 #키워드2 #키워드3`;
+    prompt = `다음은 "${keyword}" 관련 뉴스들입니다. 핵심 흐름을 3줄 요약하고 핵심 키워드 3개를 뽑아주세요.\n${headlineText}\n\n형식:\n【3줄 요약】\n- 내용1\n- 내용2\n- 내용3\n\n【핵심 키워드】\n#키워드1 #키워드2 #키워드3`;
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Google Gemini 무료 API 주소입니다.
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: mode === 'filter' ? 1500 : 500,
-        messages: [{ role: 'user', content: prompt }],
+        contents: [{ parts: [{ text: prompt }] }]
       }),
     });
 
-    if (!response.ok) {
-      const err = await response.json();
-      return res.status(500).json({ error: err.error?.message || '요청 실패' });
-    }
-
     const data = await response.json();
-    const text = (data.content?.[0]?.text || '').trim();
+    const text = data.candidates[0].content.parts[0].text.trim();
 
     if (mode === 'filter') {
-      try {
-        const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-        return res.status(200).json(parsed);
-      } catch(e) {
-        return res.status(500).json({ error: 'AI 파싱 실패' });
-      }
+      const jsonText = text.replace(/```json|```/g, '').trim();
+      return res.status(200).json(JSON.parse(jsonText));
     } else {
       return res.status(200).json({ summary: text });
     }
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: "AI 요약 중 오류가 발생했습니다." });
   }
 }
