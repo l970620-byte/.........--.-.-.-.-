@@ -298,7 +298,7 @@ button{cursor:pointer;font-family:inherit;}
   <button class="tab-btn" onclick="switchTab('script',this)">🎬 대본분석</button>
   <button class="tab-btn" onclick="switchTab('writing',this)">✍️ 작문</button>
   <button class="tab-btn" onclick="switchTab('score',this)">📊 점수 분석</button>
-  <button class="tab-btn" onclick="openTL()">📅 타임라인</button>
+  <button class="tab-btn" onclick="switchTab('timeline',this)">📅 타임라인</button>
 </div>
 
 <div id="panel-news" class="tab-panel active">
@@ -326,6 +326,30 @@ button{cursor:pointer;font-family:inherit;}
   <div class="sc-loading" id="sc-loading">대본 생성 중...</div>
   <div class="sc-empty" id="sc-empty">대본을 생성하면 여기에 표시됩니다.</div>
   <div class="sc-result" id="sc-result"></div>
+</div>
+
+<div id="panel-timeline" class="tab-panel">
+  <div class="tl-tab-wrap">
+    <div class="tl-tab-header">
+      <div class="tl-tab-controls">
+        <div class="tl-tab-label">기간</div>
+        <div class="tl-chips" id="tl-range-chips">
+          <button class="tl-chip active" data-days="7" onclick="setTLChip(this)">7일</button>
+          <button class="tl-chip" data-days="30" onclick="setTLChip(this)">1개월</button>
+          <button class="tl-chip" data-days="90" onclick="setTLChip(this)">3개월</button>
+          <button class="tl-chip" data-days="180" onclick="setTLChip(this)">6개월</button>
+        </div>
+        <div class="tl-tab-label" style="margin-top:.6rem">키워드</div>
+        <select id="tl-kw-sel2" class="tl-kw-sel">
+          <option value="">전체 키워드</option>
+        </select>
+        <button class="tl-gen-tab-btn" onclick="genTimelineTab()">📅 타임라인 생성</button>
+      </div>
+    </div>
+    <div id="tl-tab-body" class="tl-tab-body">
+      <div class="tl-tab-empty">기간과 키워드를 선택하고 생성을 눌러보세요</div>
+    </div>
+  </div>
 </div>
 
 <div id="panel-writing" class="tab-panel">
@@ -477,7 +501,7 @@ const NEWS_SRC=[{url:'https://news.kbs.co.kr/rss/rss.do?catecd=0000',name:'KBS'}
 const BH=[8,12,18],KK='news_keywords_v6';
 let kws=[],activeKws=new Set(),aDays=1,scraps={};
 
-function switchTab(t,b){document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('panel-'+t).classList.add('active');if(t==='scrap')renderScraps();if(t==='wrongnote'){renderWrongNotes();updateWrongCount();}if(t==='score')renderScorePanel();if(t==='script')scLoadList();if(t==='writing')wrLoad();}
+function switchTab(t,b){document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('panel-'+t).classList.add('active');if(t==='scrap')renderScraps();if(t==='wrongnote'){renderWrongNotes();updateWrongCount();}if(t==='score')renderScorePanel();if(t==='timeline')initTimelineTab();if(t==='script')scLoadList();if(t==='writing')wrLoad();}
 function setRange(b){document.querySelectorAll('.date-chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');aDays=parseInt(b.dataset.days);const _dc=document.getElementById('date-custom');if(_dc)_dc.classList.toggle('show',aDays===0);}
 function getDF(){if(aDays===0){const _df=document.getElementById('date-from'),_dt=document.getElementById('date-to');const f=_df?_df.value:'',to=_dt?_dt.value:'';return[f?'after:'+f:'',to?'before:'+to:''].filter(Boolean).join('+');}return'when:'+aDays+'d';}
 function getRL(){return{1:'1DAY',7:'7일',30:'1달',365:'1년',0:'직접 지정'}[aDays]||aDays+'일';}
@@ -1258,17 +1282,13 @@ async function genWritingModel(idx) {
     ].filter(p => p.text);
     // essay 데이터를 박스에 저장 (내보내기용)
     box.dataset.essay = JSON.stringify({ essay: e, question: t.question, keyword: t._kw || '', title: t.title || '' });
+    // 생성 즉시 워드 다운로드
+    exportWritingDocxData(e, t.question, t._kw||'', t.title||'');
     box.innerHTML =
-      '<div class="wr-model-label">📋 모범 작문 (4문단)</div>' +
-      paras.map(p =>
-        '<div class="wr-model-para">' +
-          '<div class="wr-model-num">' + p.num + '</div>' +
-          p.text +
-        '</div>'
-      ).join('') +
-      (e.tip ? '<div class="wr-model-tip">💡 ' + e.tip + '</div>' : '') +
-      '<button class="wr-export-btn" onclick="exportWritingDocx(' + idx + ')">📄 워드로 내보내기</button>';
-    btn.textContent = '📝 모범 작문 닫기';
+      '<div class="wr-model-label">📋 모범 작문 생성 완료 — 워드 파일이 다운로드됩니다</div>' +
+      '<div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">파일이 다운로드되지 않으면 아래 버튼을 누르세요</div>' +
+      '<button class="wr-export-btn" style="margin-top:.5rem" onclick="exportWritingDocxData(JSON.parse(atob(\'' + btoa(encodeURIComponent(JSON.stringify(e))) + '\'.replace(/%([0-9A-F]{2})/gi,(_,h)=>String.fromCharCode(parseInt(h,16)))),\'' + encodeURIComponent(t.question||'') + '\',\'' + encodeURIComponent(t._kw||'') + '\',\'' + encodeURIComponent(t.title||'') + '\')">📄 다시 다운로드</button>';
+    btn.textContent = '📝 모범 작문 보기';
   } catch(err) {
     box.innerHTML = '<div style="color:var(--muted);font-size:.75rem;">생성 실패: ' + err.message + '</div>';
     btn.textContent = '📝 모범 작문 보기';
@@ -1508,7 +1528,6 @@ function renderScripts() {
       </div>
       <div class="sc-action-row">
         <button class="sc-action-btn sc-model-btn" id="scmbtn${id}" onclick="toggleModel(${id})" ${analyzed ? 'disabled style="opacity:.5;"' : ''}>${analyzed ? '📋 분석 완료' : '📋 모범 분석 보기'}</button>
-        <button class="sc-action-btn sc-write-btn" onclick="toggleWrite(${id})">✍️ 직접 써보기</button>
         <button class="sc-action-btn" style="background:rgba(192,132,252,.1);color:#c084fc;border-color:rgba(192,132,252,.3);" onclick="toggleGuide(${id})">🗣️ 가이드</button>
         <button class="sc-action-btn" style="background:rgba(74,222,128,.08);color:var(--green);border-color:rgba(74,222,128,.2);" onclick="exportDocx(${id})">📄 워드 내보내기</button>
       </div>
@@ -1519,26 +1538,6 @@ function renderScripts() {
       <div class="sc-model-box" id="scm${id}">
         <div class="sc-loading" id="scml${id}" style="display:none;font-size:.75rem;color:var(--green);padding:.4rem 0;">✦ 분석 생성 중...</div>
         <div id="scmc${id}">${analyzed && sc._analysis ? renderAnalysis(sc._analysis) : ''}</div>
-      </div>
-      <div class="sc-write-box" id="scw${id}">
-        <div class="sc-field-group">
-          <div class="sc-field-label">① 씬 소개 (한 문장)</div>
-          <textarea class="sc-textarea sc-field" id="sct_a${id}" rows="2" placeholder="이 씬은 S#__로, __에서 __와 __가 __하는 장면입니다."></textarea>
-          <div class="sc-field-label" style="margin-top:.6rem;">② 갈등 구조</div>
-          <textarea class="sc-textarea sc-field" id="sct_b${id}" rows="2" placeholder="[인물A]는 ~을 원하고, [인물B]는 ~을 원하기 때문에 갈등이 발생합니다."></textarea>
-          <div class="sc-field-label" style="margin-top:.6rem;">③ 핵심 대사 + 이유</div>
-          <textarea class="sc-textarea sc-field" id="sct_c${id}" rows="2" placeholder="[대사]라는 대사에서 인물의 [감정/의도]가 드러납니다."></textarea>
-          <div class="sc-field-label" style="margin-top:.6rem;">④ 연출 제안</div>
-          <textarea class="sc-textarea sc-field" id="sct_d${id}" rows="2" placeholder="저라면 이 씬을 [클로즈업/롱샷] 위주로 연출해 [감정]을 강조하겠습니다."></textarea>
-        </div>
-        <div style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem;">
-          <button class="sc-submit-btn" onclick="submitAnalysis(${id})">AI 첨삭 받기</button>
-          <span class="sc-feedback-count">오늘 첨삭 <span id="sc-fb-used2">0</span>/10회</span>
-        </div>
-        <div class="sc-feedback" id="scf${id}">
-          <div class="sc-fb-label">AI 첨삭 결과</div>
-          <div id="scfc${id}"></div>
-        </div>
       </div>
       </div>
     </div>`;
@@ -1638,12 +1637,14 @@ async function toggleModel(id) {
     if (!r.ok) throw new Error(res.error || '분석 실패');
     const a = res.analysis;
     const contentEl = document.getElementById('scmc' + id);
-    contentEl.innerHTML = renderAnalysis(a);
-    // 잠금 저장 — 새로고침해도 유지
+    // 저장
     d.analyzed[id] = true;
     const scIdx = d.scripts.findIndex(s => s.id === id);
     if (scIdx >= 0) d.scripts[scIdx]._analysis = a;
     scSave(d);
+    // 워드 바로 다운로드
+    exportAnalysisDocx(sc, a);
+    contentEl.innerHTML = '<div style="font-size:.72rem;color:var(--muted);padding:.5rem 0">📄 모범 분석이 워드 파일로 다운로드됩니다<br><button class="sc-foot-btn" style="margin-top:.4rem" onclick="exportAnalysisDocx(scList.find(s=>s.id===\''+id+'\'),scData().scripts.find(s=>s.id===\''+id+'\')?._analysis)">↺ 다시 다운로드</button></div>';
     // 버튼 비활성
     const mbtn = document.getElementById('scmbtn' + id);
     if (mbtn) { mbtn.textContent = '📋 분석 완료'; mbtn.disabled = true; mbtn.style.opacity = '.5'; }
@@ -1823,14 +1824,26 @@ function exportDocx(id) {
       <tr><td style="padding:6px 10px;background:#f1f8e9;border:1px solid #c8e6c9;font-weight:bold;color:#2e7d32;">💬 면접 답변 예시</td><td style="padding:6px 10px;border:1px solid #c8e6c9;">${esc(analysis.interview||'')}</td></tr>
     </table>` : '';
 
-  const userSection = hasUserAnalysis ? `
-    <h2 style="color:#1565c0;font-size:13pt;margin:16px 0 6px;">✍️ 내 분석</h2>
+  const userSection = `
+    <h2 style="color:#1565c0;font-size:13pt;margin:16px 0 6px;">✍️ 내 분석 작성란</h2>
     <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
-      <tr><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;width:130px;">① 씬 소개</td><td style="padding:6px 10px;border:1px solid #bbdefb;">${esc(userA)||'(미작성)'}</td></tr>
-      <tr><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;">② 갈등 구조</td><td style="padding:6px 10px;border:1px solid #bbdefb;">${esc(userB)||'(미작성)'}</td></tr>
-      <tr><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;">③ 핵심 대사</td><td style="padding:6px 10px;border:1px solid #bbdefb;">${esc(userC)||'(미작성)'}</td></tr>
-      <tr><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;">④ 연출 제안</td><td style="padding:6px 10px;border:1px solid #bbdefb;">${esc(userD)||'(미작성)'}</td></tr>
-    </table>` : '<p style="color:#999;font-size:10pt;">직접 쓴 분석이 없어요.</p>';
+      <tr>
+        <td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;width:130px;vertical-align:top;">① 씬 소개<br><span style="font-size:9pt;color:#888;">(한 문장)</span></td>
+        <td style="padding:8px 10px;border:1px solid #bbdefb;height:40px;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">② 갈등 구조</td>
+        <td style="padding:8px 10px;border:1px solid #bbdefb;height:50px;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">③ 핵심 대사 + 이유</td>
+        <td style="padding:8px 10px;border:1px solid #bbdefb;height:50px;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">④ 연출 제안</td>
+        <td style="padding:8px 10px;border:1px solid #bbdefb;height:50px;">&nbsp;</td>
+      </tr>
+    </table>`;
 
   const feedbackSection = feedbackText ? `
     <h2 style="color:#0277bd;font-size:13pt;margin:16px 0 6px;">🤖 AI 첨삭 결과</h2>
@@ -2432,28 +2445,7 @@ loadKw();loadScraps();
   // 오답노트 초기 카운트
   (function(){ renderWrongNotes(); updateWrongCount(); scLoadList(); wrLoad(); })();
 
-function closeTL(){document.getElementById('tl-overlay').style.display='none';}
-
-function closeSummaryAndFetch(){closeSummary();fetchAll();}
-
-function openSummary(kw,title,url){
-  const overlay=document.getElementById('sum-overlay');
-  if(!overlay)return;
-  overlay.style.display='flex';
-  document.getElementById('sum-kw').textContent=kw||'';
-  document.getElementById('sum-title').textContent=title||'';
-  document.getElementById('sum-body').innerHTML='<div class="sum-loading">요약 생성 중...</div>';
-  fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({mode:'summarize',url,keyword:kw,title})})
-    .then(r=>r.json()).then(d=>{
-      const b=document.getElementById('sum-body');
-      if(b)b.innerHTML=d.summary||d.error||'요약 실패';
-    }).catch(e=>{
-      const b=document.getElementById('sum-body');
-      if(b)b.innerHTML='요약 실패: '+e.message;
-    });
-}
-
+function closeTL(){}
 
 // ══ 점수 분석 시스템 ══
 var SCORE_SC=[
@@ -2588,17 +2580,7 @@ function saveWritingScore(scores){
   localStorage.setItem('wr_score_history',JSON.stringify(hist.slice(0,50)));
 }
 
-function openTL(){
-  const ov=document.getElementById('tl-overlay');
-  if(!ov)return;
-  ov.style.display='flex';
-  // tl-kw-sel 채우기
-  const sel=document.getElementById('tl-kw-sel');
-  if(sel){
-    sel.innerHTML='<option value="">전체</option>'+kws.map(k=>'<option value="'+k+'">'+k+'</option>').join('');
-  }
-}
-
+function openTL(){}
 function setTLRange(b){
   document.querySelectorAll('.tl-chip').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
@@ -2693,6 +2675,236 @@ hr{border:none;border-top:1px solid #ddd;margin:18px 0;}
   a.href=url;a.download='작문예제_'+today+'.doc';
   document.body.appendChild(a);a.click();
   document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function initTimelineTab(){
+  const sel=document.getElementById('tl-kw-sel2');
+  if(sel){
+    sel.innerHTML='<option value="">전체 키워드</option>'+kws.map(k=>'<option value="'+k+'">'+k+'</option>').join('');
+  }
+}
+
+function setTLChip(b){
+  document.querySelectorAll('#tl-range-chips .tl-chip').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+}
+
+async function genTimelineTab(){
+  const days=parseInt(document.querySelector('#tl-range-chips .tl-chip.active')?.dataset.days||'7');
+  const kw=document.getElementById('tl-kw-sel2')?.value||'';
+  const body=document.getElementById('tl-tab-body');
+  if(!body)return;
+  const btn=document.querySelector('.tl-gen-tab-btn');
+  if(btn){btn.disabled=true;btn.textContent='생성 중...';}
+  body.innerHTML='<div class="tl-tab-loading">타임라인 생성 중...</div>';
+  try{
+    const headlines=(window._hl||[]).filter(a=>!kw||(a.keywords||[]).includes(kw)||a.kw===kw);
+    const r=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mode:'timeline',headlines:headlines.slice(0,30),keyword:kw,days})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'실패');
+    const items=d.timeline||[];
+    if(!items.length){
+      body.innerHTML='<div class="tl-tab-empty">타임라인 데이터가 없어요. 뉴스를 먼저 불러와 주세요.</div>';
+    } else {
+      body.innerHTML='<div class="tl-tab-kw-label">'+(kw||'전체 키워드')+' · 최근 '+days+'일</div>'+
+        items.map(it=>'<div class="tl-tab-item"><div class="tl-tab-date">'+(it.date||'')+'</div><div class="tl-tab-text">'+(it.event||it.content||it.title||'')+'</div>'+(it.detail?'<div class="tl-tab-detail">'+it.detail+'</div>':'')+' </div>').join('');
+    }
+  }catch(e){
+    body.innerHTML='<div class="tl-tab-err">생성 실패: '+e.message+'</div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='📅 타임라인 생성';}
+  }
+}
+
+function exportWritingDocxData(e, question, kw, title){
+  if(typeof question === 'string' && question.includes('%')) question = decodeURIComponent(question);
+  if(typeof kw === 'string' && kw.includes('%')) kw = decodeURIComponent(kw);
+  if(typeof title === 'string' && title.includes('%')) title = decodeURIComponent(title);
+  const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace(/\.$/,'');
+  const esc = s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  const paras = [
+    {num:'① 서론', text:e.p1||''},
+    {num:'② 본론 1', text:e.p2||''},
+    {num:'③ 본론 2', text:e.p3||''},
+    {num:'④ 본론 3 (반론/대안)', text:e.p4||''},
+    {num:'⑤ 결론', text:e.p5||''},
+  ].filter(p=>p.text);
+  const parasHtml = paras.map(p=>`
+    <tr>
+      <td style="padding:6px 10px;background:#f3f0ff;border:1px solid #d4c5f9;font-weight:bold;color:#6a1b9a;width:140px;vertical-align:top;">${p.num}</td>
+      <td style="padding:8px 12px;border:1px solid #d4c5f9;line-height:1.85;">${esc(p.text)}</td>
+    </tr>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>body{font-family:'맑은 고딕',Arial,sans-serif;font-size:11pt;line-height:1.8;margin:40px;color:#222;}
+h1{font-size:15pt;color:#6a1b9a;border-bottom:2px solid #9c4dcc;padding-bottom:6px;margin:0 0 12px;}
+h2{font-size:12pt;color:#555;margin:16px 0 6px;}
+table{width:100%;border-collapse:collapse;}
+.q{background:#f9f5ff;border-left:4px solid #9c4dcc;padding:10px 14px;margin-bottom:12px;font-size:11pt;}
+.tip{background:#fffde7;border:1px solid #f0d060;border-radius:4px;padding:8px 12px;font-size:10.5pt;margin:12px 0;}
+.write-row td{height:60px;vertical-align:top;}
+</style></head><body>
+<h1>📝 모범 작문 · ${esc(title||kw)} · ${today}</h1>
+<div class="q">📋 ${esc(question)}</div>
+<h2>✨ 모범 작문 (5문단)</h2>
+<table>${parasHtml}</table>
+${e.tip ? '<div class="tip">💡 핵심 전략: '+esc(e.tip)+'</div>' : ''}
+<h2 style="margin-top:24px;color:#1565c0;">✍️ 내 작문 작성란</h2>
+<table>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;width:140px;vertical-align:top;">① 서론</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">② 본론 1</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">③ 본론 2</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">④ 본론 3</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">⑤ 결론</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+</table>
+</body></html>`;
+  const blob=new Blob(['\uFEFF'+html],{type:'application/msword;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='모범작문_'+today+'.doc';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function exportAnalysisDocx(sc, a) {
+  if(!sc || !a) return;
+  const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace(/\.$/,'');
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const scriptLines = (sc.script||'').split('\n').map(line => {
+    const t = line.trim();
+    if (!t) return '<p style="margin:2px">&nbsp;</p>';
+    if (t.startsWith('(')) return '<p style="color:#888;font-style:italic;margin:3px 0">'+esc(t)+'</p>';
+    const m = t.match(/^([가-힣A-Za-z\s]{1,8})(\s*\([^)]*\))?\s*:\s*(.*)/);
+    if (m) return '<p style="margin:3px 0"><b style="color:#5c3d11">'+esc(m[1].trim())+'</b>: '+esc(m[3])+'</p>';
+    return '<p style="margin:3px 0">'+esc(t)+'</p>';
+  }).join('');
+  const rows = [
+    {key:'characters', label:'👥 인물 관계 & 갈등'},
+    {key:'theme', label:'🎯 주제 & 감정선'},
+    {key:'direction', label:'🎥 연출 포인트'},
+    {key:'interview', label:'💬 면접 답변 예시'},
+  ].map(r => `<tr>
+    <td style="padding:6px 10px;background:#f1f8e9;border:1px solid #c8e6c9;font-weight:bold;color:#2e7d32;width:140px;vertical-align:top;">${r.label}</td>
+    <td style="padding:8px 12px;border:1px solid #c8e6c9;line-height:1.85;">${esc(a[r.key]||'')}</td>
+  </tr>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>body{font-family:'맑은 고딕',Arial,sans-serif;font-size:11pt;line-height:1.8;margin:40px;color:#222;}
+h1{font-size:15pt;color:#2e7d32;border-bottom:2px solid #4caf50;padding-bottom:6px;margin:0 0 12px;}
+h2{font-size:12pt;color:#555;margin:16px 0 6px;}
+.script-box{background:#fafaf7;border:1px solid #ddd;padding:12px 16px;margin-bottom:12px;font-size:10.5pt;}
+.q-box{background:#fffde7;border:1px solid #f0d060;padding:8px 14px;margin-bottom:14px;}
+table{width:100%;border-collapse:collapse;}
+.write-row td{height:55px;vertical-align:top;}
+
+/* ══ 버튼 색상 강제 오버라이드 ══ */
+button { color: inherit; }
+
+/* kw-chip (키워드 칩) */
+.kw-chip { background:rgba(167,139,250,.12) !important; border:1px solid rgba(167,139,250,.2) !important; color:#c084fc !important; }
+.kw-chip.active { background:rgba(167,139,250,.25) !important; border-color:rgba(167,139,250,.4) !important; color:#e0c6ff !important; }
+.kw-chip .kw-x { color:#a78bfa !important; }
+
+/* sel-btn */
+.sel-btn { background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.12) !important; color:#ccc !important; }
+.sel-btn.active { background:rgba(250,204,21,.15) !important; border-color:rgba(250,204,21,.35) !important; color:#facc15 !important; }
+
+/* sc-action-btn */
+.sc-action-btn { background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.1) !important; color:#ccc !important; font-size:.68rem; padding:.28rem .65rem; border-radius:6px; cursor:pointer; transition:.15s; }
+.sc-action-btn:hover { background:rgba(255,255,255,.12) !important; color:#fff !important; }
+.sc-action-btn.sc-model-btn { background:rgba(167,139,250,.12) !important; border-color:rgba(167,139,250,.25) !important; color:#c084fc !important; }
+.sc-action-btn.sc-model-btn:hover { background:rgba(167,139,250,.22) !important; }
+
+/* wr-news-btn */
+.wr-news-btn { background:rgba(250,204,21,.08) !important; border:1px solid rgba(250,204,21,.2) !important; color:#facc15 !important; }
+.wr-news-btn:hover { background:rgba(250,204,21,.16) !important; }
+
+/* wr-tag */
+.wr-tag { background:rgba(74,222,128,.12) !important; color:#4ade80 !important; }
+
+/* sc-tag */
+.sc-tag { background:rgba(167,139,250,.15) !important; color:#c084fc !important; border:none !important; }
+.sc-tag.genre { background:rgba(250,204,21,.12) !important; color:#facc15 !important; }
+
+/* sc-foot-btn */
+.sc-foot-btn { background:rgba(255,255,255,.05) !important; border:1px solid rgba(255,255,255,.08) !important; color:#aaa !important; }
+.sc-foot-btn:hover { background:rgba(255,255,255,.1) !important; color:#eee !important; }
+
+/* tl-gen-tab-btn */
+.tl-gen-tab-btn { background:rgba(250,204,21,.15); border:1px solid rgba(250,204,21,.3); color:#facc15; font-size:.78rem; font-weight:700; padding:.45rem .9rem; border-radius:8px; cursor:pointer; transition:.15s; width:100%; margin-top:.6rem; }
+.tl-gen-tab-btn:hover { background:rgba(250,204,21,.25); }
+.tl-gen-tab-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+/* tl-chip */
+.tl-chip { background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.12) !important; color:#bbb !important; }
+.tl-chip.active { background:rgba(250,204,21,.18) !important; border-color:rgba(250,204,21,.4) !important; color:#facc15 !important; font-weight:700; }
+
+/* wr-export-btn, wf-export-btn */
+.wr-export-btn, .wf-export-btn, .nq-export-btn { background:rgba(96,165,250,.1) !important; border:1px solid rgba(96,165,250,.25) !important; color:#60a5fa !important; }
+.wr-export-btn:hover, .wf-export-btn:hover { background:rgba(96,165,250,.2) !important; }
+
+/* kw-act-btn */
+.kw-act-btn { background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.1) !important; color:#bbb !important; }
+.kw-act-btn:hover { color:#eee !important; background:rgba(255,255,255,.12) !important; }
+
+/* sc-toggle-btn */
+.sc-toggle-btn { background:rgba(255,255,255,.05) !important; border:1px solid rgba(255,255,255,.08) !important; color:#aaa !important; }
+
+/* wr-model-btn */
+.wr-model-btn { background:rgba(167,139,250,.1) !important; border:1px solid rgba(167,139,250,.22) !important; color:#c084fc !important; }
+.wr-model-btn:hover { background:rgba(167,139,250,.2) !important; }
+
+/* scrap-btn */
+.scrap-btn { background:rgba(255,255,255,.05) !important; border:1px solid rgba(255,255,255,.1) !important; color:#aaa !important; }
+.scrap-btn.on { background:rgba(250,204,21,.12) !important; border-color:rgba(250,204,21,.3) !important; color:#facc15 !important; }
+
+/* wf-gen-btn */
+.wf-gen-btn { background:linear-gradient(135deg,rgba(124,58,237,.6),rgba(167,139,250,.5)) !important; border:none !important; color:#fff !important; }
+
+/* tl-close */
+.tl-close { background:rgba(255,255,255,.08) !important; border:1px solid rgba(255,255,255,.12) !important; color:#bbb !important; }
+.tl-close:hover { color:#fff !important; background:rgba(255,255,255,.15) !important; }
+
+/* AI 첨삭 받기 */
+.sc-submit-btn { background:rgba(167,139,250,.15) !important; border:1px solid rgba(167,139,250,.3) !important; color:#c084fc !important; }
+
+/* ══ 타임라인 탭 ══ */
+.tl-tab-wrap { padding:.5rem 0; }
+.tl-tab-header { margin-bottom:1rem; }
+.tl-tab-controls { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:.8rem; }
+.tl-tab-label { font-size:.65rem; color:var(--muted); margin-bottom:.35rem; }
+.tl-kw-sel { width:100%; font-size:.75rem; padding:.35rem .5rem; background:#1a1a1a; border:1px solid rgba(255,255,255,.12); color:#ddd; border-radius:6px; margin-top:.2rem; }
+.tl-tab-body { min-height:100px; }
+.tl-tab-empty { color:var(--muted); font-size:.78rem; text-align:center; padding:2rem; }
+.tl-tab-loading { color:var(--muted); font-size:.78rem; text-align:center; padding:1.5rem; }
+.tl-tab-err { color:#ef4444; font-size:.75rem; padding:.5rem; }
+.tl-tab-kw-label { font-size:.68rem; font-weight:700; color:var(--accent); margin-bottom:.8rem; padding:.3rem .6rem; background:rgba(250,204,21,.08); border-radius:5px; display:inline-block; }
+.tl-tab-item { padding:.65rem 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.tl-tab-item:last-child { border:none; }
+.tl-tab-date { font-size:.65rem; color:var(--accent); font-weight:700; margin-bottom:.2rem; }
+.tl-tab-text { font-size:.78rem; color:#ddd; line-height:1.65; }
+.tl-tab-detail { font-size:.72rem; color:var(--muted); margin-top:.3rem; line-height:1.55; }
+</style></head><body>
+<h1>📋 모범 분석 · ${esc(sc.genre||'')} · ${today}</h1>
+<p style="color:#888;font-size:10pt">장르: ${esc(sc.genre||'')} | 상황: ${esc(sc.situation||'')}</p>
+<h2>📝 대본 원문</h2>
+<div class="script-box">${scriptLines}</div>
+<div class="q-box"><b style="color:#7a6000">🎯 랜덤 질문</b><br>${esc(sc.randQ||'')}</div>
+<h2>📋 모범 분석</h2>
+<table>${rows}</table>
+<h2 style="margin-top:24px;color:#1565c0;">✍️ 내 분석 작성란</h2>
+<table>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;width:140px;vertical-align:top;">① 씬 소개</td><td style="padding:8px;border:1px solid #bbdefb;height:55px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">② 갈등 구조</td><td style="padding:8px;border:1px solid #bbdefb;height:55px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">③ 핵심 대사</td><td style="padding:8px;border:1px solid #bbdefb;height:55px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">④ 연출 제안</td><td style="padding:8px;border:1px solid #bbdefb;height:55px;">&nbsp;</td></tr>
+</table>
+</body></html>`;
+  const blob=new Blob(['\uFEFF'+html],{type:'application/msword;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a2=document.createElement('a');
+  a2.href=url;a2.download='모범분석_'+esc(sc.genre||'대본')+'_'+today+'.doc';
+  document.body.appendChild(a2);a2.click();
+  document.body.removeChild(a2);URL.revokeObjectURL(url);
 }
 </script>
 </body>
