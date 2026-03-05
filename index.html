@@ -1,0 +1,3024 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>브리핑 — 서울예대 방송영상</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root{--bg:#111;--card:#1a1a1a;--border:rgba(255,255,255,.08);--muted:#666;--accent:#facc15;--purple:#a78bfa;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:#eee;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-size:14px;min-height:100vh;}
+button{cursor:pointer;font-family:inherit;background:none;color:inherit;border:none;box-sizing:border-box;}
+
+/* ── 헤더 ── */
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:.55rem 1.2rem;background:#0d0d0d;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.top-logo{display:flex;align-items:center;gap:.6rem;}
+.on-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:.15rem .4rem;border-radius:3px;letter-spacing:.08em;}
+.logo-text{font-size:1.05rem;font-weight:800;letter-spacing:-.02em;}
+.free-badge{font-size:.6rem;background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3);padding:.1rem .35rem;border-radius:3px;}
+.clock{font-size:.88rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;}
+
+/* ── 키워드 관리 ── */
+.kw-bar{display:flex;align-items:center;gap:.5rem;padding:.45rem 1rem;background:#0f0f0f;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.kw-label{font-size:.65rem;color:var(--muted);white-space:nowrap;}
+.kw-del{font-size:.55rem;margin-left:.2rem;opacity:.5;}
+.kw-actions{display:flex;gap:.3rem;flex-shrink:0;}
+.kw-input-wrap{display:flex;gap:.3rem;width:100%;}
+.kw-input{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;padding:.3rem .6rem;color:#eee;font-size:.72rem;}
+.fetch-row{display:flex;align-items:center;gap:.6rem;padding:.4rem 1rem;background:#0f0f0f;border-bottom:1px solid var(--border);}
+.status-txt{font-size:.7rem;color:var(--muted);}
+
+/* ── 탭 ── */
+.tabs{display:flex;gap:0;padding:0 1rem;background:#0d0d0d;border-bottom:1px solid var(--border);}
+.tc{background:#e53e3e;color:#fff;font-size:.55rem;padding:.05rem .3rem;border-radius:100px;margin-left:.25rem;}
+.tab-panel{display:none;padding:1rem;}
+.tab-panel.active{display:block;}
+
+/* ── 뉴스 그리드 ── */
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:.7rem;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem;transition:.15s;position:relative;}
+.card:hover{border-color:rgba(255,255,255,.15);}
+.card-num{font-size:.62rem;font-weight:800;color:var(--accent);margin-bottom:.3rem;}
+.card-source{font-size:.58rem;color:var(--muted);float:right;}
+.card-title{font-size:1rem;font-weight:700;line-height:1.55;margin-bottom:.45rem;color:#f0f0f0;}
+.card-title a{color:inherit;text-decoration:none;}
+.card-title a:hover{text-decoration:underline;}
+.card-desc{font-size:.72rem;color:#999;line-height:1.55;margin-bottom:.5rem;}
+.card-summary{font-size:.72rem;color:#bbb;line-height:1.6;margin:.4rem 0;padding:.4rem .6rem;background:rgba(255,255,255,.03);border-left:2px solid rgba(250,204,21,.3);border-radius:0 5px 5px 0;}
+.card-kws{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem;}
+.card-kw-tag{font-size:.6rem;font-weight:700;padding:.15rem .45rem;border-radius:100px;background:rgba(123,180,255,.1);color:#93c5fd;border:1px solid rgba(123,180,255,.2);}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.55rem;padding-top:.45rem;border-top:1px solid var(--border);}
+.card-date{font-size:.62rem;color:var(--muted);}
+
+/* ── AI 요약 팝업 ── */
+.sum-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.sum-box{background:#1a1a1a;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:1.2rem;width:100%;max-width:520px;max-height:80vh;overflow-y:auto;}
+.sum-title{font-size:.85rem;font-weight:700;color:#eee;margin-bottom:.8rem;}
+.sum-kw{font-size:.65rem;color:var(--accent);margin-bottom:.4rem;font-weight:700;}
+.sum-body{font-size:.78rem;color:#ccc;line-height:1.7;}
+.sum-close{float:right;font-size:.72rem;padding:.2rem .5rem;border-radius:4px;background:rgba(255,255,255,.07);border:1px solid var(--border);color:var(--muted);}
+.sum-loading{text-align:center;padding:2rem;color:var(--muted);}
+.sum-fetch-row{display:flex;align-items:center;justify-content:space-between;margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--border);}
+
+/* ── 대본 분석 ── */
+.sc-controls{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;}
+.sc-count{font-size:.65rem;color:var(--muted);}
+.sc-loading{display:none;font-size:.75rem;color:var(--muted);padding:.5rem 0;}
+.sc-loading.on{display:block;}
+.sc-result{display:flex;flex-direction:column;gap:.7rem;}
+.sc-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.78rem;}
+.sc-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem;}
+.sc-card-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;padding-bottom:.5rem;}
+.sc-card.collapsed .sc-card-body{display:none;}
+.sc-card.collapsed{padding-bottom:.8rem;}
+.sc-card-body{}
+.sc-tag{font-size:.6rem;font-weight:700;padding:.15rem .4rem;border-radius:3px;background:rgba(167,139,250,.15);color:#c084fc;margin-right:.25rem;}
+.sc-scene{font-size:.75rem;color:var(--muted);margin:.4rem 0;}
+.sc-script{font-size:.8rem;line-height:1.8;color:#ddd;background:rgba(255,255,255,.02);border-left:2px solid rgba(167,139,250,.3);padding:.5rem .7rem;border-radius:0 6px 6px 0;margin:.5rem 0;white-space:pre-wrap;}
+.sc-q{margin-top:.6rem;padding:.5rem .7rem;background:rgba(250,204,21,.05);border-left:2px solid rgba(250,204,21,.3);border-radius:0 6px 6px 0;}
+.sc-q-label{font-size:.6rem;font-weight:700;color:var(--accent);}
+.sc-q-text{font-size:.75rem;color:#eee;margin-top:.15rem;}
+.sc-foot{display:flex;gap:.4rem;margin-top:.6rem;flex-wrap:wrap;}
+.sc-fb-box{margin-top:.6rem;padding:.6rem .8rem;background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.12);border-radius:8px;}
+.sc-fb-item{margin-bottom:.5rem;}
+.sc-fb-label{font-size:.6rem;font-weight:700;color:#a78bfa;margin-bottom:.15rem;}
+.sc-fb-score{font-size:.72rem;color:#eee;}
+.sc-fb-text{font-size:.72rem;color:#ccc;line-height:1.55;}
+.sc-analysis-form{margin-top:.6rem;display:flex;flex-direction:column;gap:.4rem;}
+.sc-form-item{display:flex;flex-direction:column;gap:.2rem;}
+.sc-form-label{font-size:.65rem;font-weight:700;color:#a78bfa;}
+.sc-form-ta{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.4rem .6rem;color:#eee;font-size:.75rem;resize:vertical;font-family:inherit;}
+
+/* ── 작문 ── */
+.wr-controls{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem;}
+.wr-loading{display:none;font-size:.72rem;color:var(--muted);padding:.3rem 0;}
+.wr-loading.on{display:block;}
+.wr-result{display:flex;flex-direction:column;gap:.6rem;}
+.wr-topic{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem;}
+.wr-tag{font-size:.6rem;font-weight:700;padding:.1rem .35rem;border-radius:3px;background:rgba(74,222,128,.12);color:#4ade80;margin-right:.2rem;}
+.wr-kichul{background:rgba(250,204,21,.12);color:#fcd34d;}
+.wr-diff{font-size:.58rem;padding:.1rem .3rem;border-radius:3px;margin-left:.2rem;}
+.wr-diff.상{background:rgba(239,68,68,.12);color:#f87171;}
+.wr-diff.중{background:rgba(251,146,60,.12);color:#fb923c;}
+.wr-diff.하{background:rgba(74,222,128,.12);color:#4ade80;}
+.wr-q{font-size:.82rem;font-weight:600;color:#eee;margin:.4rem 0 .2rem;}
+.wr-hint{font-size:.68rem;color:var(--muted);margin-bottom:.5rem;}
+.wr-foot{display:flex;gap:.4rem;flex-wrap:wrap;}
+.wr-toggle-btn{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.2);color:#4ade80;}
+.wr-model-box{margin-top:.6rem;font-size:.8rem;color:#ccc;line-height:1.7;display:none;}
+.wr-model-box.open{display:block;}
+.wr-guide-box{margin-top:.5rem;padding:.5rem .7rem;background:rgba(167,139,250,.05);border-left:2px solid rgba(167,139,250,.3);font-size:.72rem;color:#ccc;line-height:1.6;display:none;border-radius:0 6px 6px 0;}
+.wr-guide-box.open{display:block;}
+
+/* ── 작문 피드백 ── */
+.wf-section{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);}
+.wf-title{font-size:.82rem;font-weight:700;color:#eee;margin-bottom:.6rem;}
+.wf-upload-zone{border:2px dashed rgba(255,255,255,.12);border-radius:10px;padding:2rem;text-align:center;cursor:pointer;transition:.2s;margin-bottom:.6rem;}
+.wf-upload-zone:hover{border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.04);}
+.wf-upload-icon{font-size:2rem;margin-bottom:.4rem;}
+.wf-upload-text{font-size:.8rem;color:#eee;}
+.wf-upload-sub{font-size:.65rem;color:var(--muted);}
+.wf-file-info{font-size:.72rem;color:#4ade80;margin-bottom:.5rem;}
+.wf-result{margin-top:.8rem;}
+.wf-score{font-size:1.1rem;font-weight:800;color:#eee;margin-bottom:.4rem;}
+.wf-summary{font-size:.78rem;color:#bbb;margin-bottom:.8rem;}
+.wf-section-title{font-size:.68rem;font-weight:700;color:#a78bfa;margin:.6rem 0 .3rem;}
+.wf-item{font-size:.75rem;color:#ccc;line-height:1.6;margin-bottom:.3rem;padding-left:.6rem;}
+.wf-orig{color:#f87171;}
+.wf-fix{color:#4ade80;}
+
+/* ── 스크랩 ── */
+.scrap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.6rem;}
+.scrap-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.7rem;}
+.scrap-title{font-size:1rem;font-weight:700;color:#f0f0f0;margin-bottom:.35rem;}
+.scrap-title a{color:inherit;text-decoration:none;}
+.scrap-title a:hover{text-decoration:underline;}
+.scrap-meta{font-size:.62rem;color:var(--muted);margin-bottom:.4rem;}
+
+/* ── 오답노트 ── */
+.wrong-list{display:flex;flex-direction:column;gap:.5rem;}
+.wrong-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.7rem;}
+.wrong-item-header{display:flex;justify-content:space-between;margin-bottom:.3rem;}
+.wrong-kw{font-size:.6rem;font-weight:700;color:#fcd34d;}
+.wrong-date{font-size:.6rem;color:var(--muted);}
+.wrong-q{font-size:.78rem;color:#eee;margin:.2rem 0 .4rem;line-height:1.5;}
+.wrong-hint{font-size:.65rem;color:var(--muted);margin-bottom:.4rem;}
+.wrong-answer{font-size:.68rem;color:#bbb;margin-bottom:.4rem;}
+.wrong-foot{display:flex;gap:.4rem;}
+.wrong-retry{font-size:.62rem;padding:.2rem .5rem;border-radius:4px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);color:#4ade80;}
+.wrong-del{font-size:.62rem;padding:.2rem .5rem;border-radius:4px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);color:#f87171;}
+.wrong-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.78rem;}
+
+/* ── 약점 분석 ── */
+.weakness-section{margin-bottom:1.5rem;}
+.weakness-title{font-size:.78rem;font-weight:700;color:#eee;margin-bottom:.6rem;}
+.weakness-bars{display:flex;flex-direction:column;gap:.4rem;}
+.wb-row{display:flex;align-items:center;gap:.5rem;}
+.wb-label{font-size:.68rem;color:var(--muted);width:60px;text-align:right;flex-shrink:0;}
+.wb-track{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+.wb-fill{height:100%;border-radius:3px;transition:.4s;}
+.wb-val{font-size:.65rem;color:#eee;width:25px;flex-shrink:0;}
+
+/* ── 타임라인 ── */
+.tl-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.tl-box{background:#1a1a1a;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:1.2rem;width:100%;max-width:640px;max-height:85vh;overflow-y:auto;}
+.tl-title{font-size:.85rem;font-weight:700;color:#eee;margin-bottom:.8rem;}
+.tl-item{display:flex;gap:.6rem;margin-bottom:.6rem;}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;}
+.tl-content{flex:1;}
+.tl-date{font-size:.6rem;color:var(--muted);}
+.tl-text{font-size:.75rem;color:#ddd;line-height:1.5;}
+.tl-src{font-size:.58rem;color:var(--muted);}
+
+/* ── 모달 (근거추출) ── */
+#nq-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(6px);}
+.nq-modal{background:#181818;border:1px solid rgba(255,255,255,.12);border-radius:14px;width:100%;max-width:700px;max-height:90vh;overflow-y:auto;padding:1.5rem;animation:modalIn .2s ease;}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.nq-modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;}
+.nq-modal-kw{font-size:.62rem;font-weight:800;color:#fcd34d;}
+.nq-modal-close{font-size:.72rem;padding:.25rem .6rem;border-radius:5px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--muted);cursor:pointer;}
+.nq-modal-close:hover{background:rgba(255,255,255,.14);color:#fff;}
+.nq-modal-title{font-size:.88rem;font-weight:700;color:#eee;line-height:1.55;margin-bottom:.3rem;}
+.nq-modal-src{font-size:.62rem;color:var(--muted);margin-bottom:1rem;padding-bottom:.8rem;border-bottom:1px solid rgba(255,255,255,.07);}
+.nq-modal-loading{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;}
+.nq-modal .nq-list{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;}
+.nq-modal .nq-item{background:rgba(74,222,128,.04);border-left:3px solid rgba(74,222,128,.3);border-radius:0 8px 8px 0;padding:.7rem .9rem;}
+.nq-modal .nq-type{font-size:.6rem;font-weight:800;color:#4ade80;letter-spacing:.06em;margin-bottom:.2rem;}
+.nq-modal .nq-q{font-size:.8rem;color:#eee;line-height:1.6;margin-bottom:.3rem;}
+.nq-modal-answer-section{border-top:1px solid rgba(255,255,255,.08);padding-top:1rem;margin-top:.5rem;}
+.nq-modal-selected-q{font-size:.75rem;color:#fcd34d;font-weight:600;margin-bottom:.7rem;line-height:1.5;}
+.nq-modal-tabs{display:flex;gap:.4rem;margin-bottom:.7rem;}
+.nq-atab{font-size:.7rem;padding:.3rem .7rem;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--muted);cursor:pointer;}
+.nq-atab.active{background:rgba(192,132,252,.15);border-color:rgba(192,132,252,.3);color:#c084fc;}
+.nq-answer-ta{width:100%;min-height:120px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.7rem;color:#eee;font-size:.8rem;line-height:1.65;resize:vertical;font-family:inherit;}
+.nq-answer-ta:focus{outline:none;border-color:rgba(192,132,252,.4);}
+.nq-upload-zone{border:2px dashed rgba(255,255,255,.15);border-radius:10px;padding:2rem;text-align:center;cursor:pointer;transition:.2s;}
+.nq-upload-zone:hover{border-color:rgba(192,132,252,.4);background:rgba(192,132,252,.04);}
+.nq-upload-icon{font-size:2rem;margin-bottom:.5rem;}
+.nq-upload-text{font-size:.8rem;color:#eee;margin-bottom:.2rem;}
+.nq-upload-sub{font-size:.65rem;color:var(--muted);}
+.nq-file-preview{margin-top:.6rem;padding:.5rem .7rem;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:7px;font-size:.72rem;color:#4ade80;}
+.nq-modal-actions{display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap;}
+.nq-feedback-wrap{margin-top:.8rem;padding:.8rem 1rem;background:rgba(192,132,252,.06);border:1px solid rgba(192,132,252,.15);border-radius:10px;}
+.nq-fb-title{font-size:.72rem;font-weight:700;color:#c084fc;margin-bottom:.5rem;}
+.nq-fb-score{font-size:.9rem;font-weight:800;color:#eee;margin-bottom:.4rem;}
+.nq-fb-section{margin-bottom:.5rem;}
+.nq-fb-label{font-size:.65rem;font-weight:700;color:#a78bfa;margin-bottom:.2rem;}
+.nq-fb-text{font-size:.75rem;color:#ddd;line-height:1.6;}
+.nq-modal-export-row{margin-top:.6rem;text-align:right;}
+
+/* ════ 버튼 전체 다크 테마 ════ */
+button{cursor:pointer;font-family:inherit;background:none;color:inherit;border:none;box-sizing:border-box;}
+
+.tab-btn{font-size:.72rem;padding:.55rem .85rem;border:none;background:none;color:#888;border-bottom:2px solid transparent;cursor:pointer;transition:.15s;font-weight:500;white-space:nowrap;}
+.tab-btn:hover{color:#bbb;}
+.tab-btn.active{color:#facc15;border-bottom-color:#facc15;font-weight:700;}
+
+.fetch-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .9rem;border-radius:7px;background:rgba(250,204,21,.14);border:1px solid rgba(250,204,21,.35);color:#facc15;font-size:.76rem;font-weight:700;cursor:pointer;transition:.15s;}
+.fetch-btn:hover{background:rgba(250,204,21,.24);border-color:rgba(250,204,21,.6);}
+.fetch-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.day-sel{font-size:.76rem;font-weight:700;padding:.32rem 1.4rem .32rem .55rem;background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.35);color:#facc15;border-radius:7px;cursor:pointer;outline:none;transition:.15s;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%23facc15'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .45rem center;}
+.day-sel:hover{background-color:rgba(250,204,21,.2);}
+.day-sel option{background:#18181b;color:#facc15;}
+
+.kw-chip{font-size:.68rem;padding:.2rem .55rem;border-radius:100px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.22);color:#c084fc;cursor:pointer;transition:.15s;font-weight:500;}
+.kw-chip:hover{background:rgba(167,139,250,.22);}
+.kw-chip.active{background:rgba(167,139,250,.28);border-color:rgba(167,139,250,.48);color:#e0c6ff;font-weight:700;}
+.kw-add-btn{font-size:.7rem;padding:.2rem .55rem;border-radius:6px;background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.3);color:#facc15;cursor:pointer;transition:.15s;}
+.kw-add-btn:hover{background:rgba(250,204,21,.22);}
+.kw-act-btn{font-size:.65rem;padding:.22rem .5rem;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+.kw-act-btn:hover{background:rgba(255,255,255,.12);color:#eee;}
+
+.scrap-btn{font-size:.65rem;font-weight:600;padding:.2rem .5rem;border-radius:5px;background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.22);color:#d4a017;cursor:pointer;transition:.15s;}
+.scrap-btn:hover{background:rgba(250,204,21,.2);}
+.scrap-btn.on{background:rgba(250,204,21,.2);border-color:rgba(250,204,21,.42);color:#facc15;}
+.scrap-del{font-size:.62rem;padding:.18rem .45rem;border-radius:4px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;cursor:pointer;transition:.15s;margin-left:auto;}
+.scrap-del:hover{background:rgba(239,68,68,.2);}
+.nq-btn{font-size:.65rem;font-weight:600;padding:.2rem .5rem;border-radius:5px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);color:#4ade80;cursor:pointer;transition:.15s;}
+.nq-btn:hover{background:rgba(74,222,128,.2);}
+.sum-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.22);color:#c084fc;cursor:pointer;transition:.15s;}
+.sum-btn:hover{background:rgba(167,139,250,.2);}
+.wr-news-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.2);color:#d4a017;cursor:pointer;transition:.15s;}
+.wr-news-btn:hover{background:rgba(250,204,21,.16);}
+
+.sc-gen-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem 1.1rem;border-radius:7px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.32);color:#c084fc;font-size:.82rem;font-weight:700;cursor:pointer;transition:.15s;}
+.sc-gen-btn:hover{background:rgba(167,139,250,.26);}
+.sc-action-btn{font-size:.68rem;padding:.28rem .65rem;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#ccc;cursor:pointer;transition:.15s;}
+.sc-action-btn:hover{background:rgba(255,255,255,.12);color:#eee;}
+.sc-guide-btn{background:rgba(192,132,252,.12)!important;border-color:rgba(192,132,252,.28)!important;color:#c084fc!important;}
+.sc-guide-btn:hover{background:rgba(192,132,252,.22)!important;}
+.sc-export-btn{background:rgba(74,222,128,.1)!important;border-color:rgba(74,222,128,.25)!important;color:#4ade80!important;}
+.sc-export-btn:hover{background:rgba(74,222,128,.2)!important;}
+.sc-model-btn{background:rgba(167,139,250,.12)!important;border-color:rgba(167,139,250,.28)!important;color:#c084fc!important;}
+.sc-submit-btn{padding:.4rem .9rem;border-radius:6px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.3);color:#c084fc;font-size:.75rem;font-weight:600;cursor:pointer;transition:.15s;}
+.sc-submit-btn:hover{background:rgba(167,139,250,.26);}
+.sc-arg-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.22);color:#60a5fa;cursor:pointer;transition:.15s;}
+.sc-col-btn,.sc-toggle-btn,.sc-foot-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+.sc-col-btn:hover,.sc-toggle-btn:hover,.sc-foot-btn:hover{background:rgba(255,255,255,.1);color:#eee;}
+
+.wr-gen-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem 1rem;border-radius:7px;background:rgba(74,222,128,.16);border:1px solid rgba(74,222,128,.32);color:#4ade80;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;}
+.wr-gen-btn:hover{background:rgba(74,222,128,.26);border-color:rgba(74,222,128,.5);}
+.wr-gen-btn:disabled{opacity:.4;cursor:not-allowed;}
+.wr-export-all-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .9rem;border-radius:7px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.32);color:#60a5fa;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;}
+.wr-export-all-btn:hover{background:rgba(96,165,250,.24);}
+.wr-reset-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.4rem .9rem;border-radius:7px;background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.28);color:#fb7185;font-size:.78rem;font-weight:700;white-space:nowrap;cursor:pointer;transition:.15s;}
+.wr-reset-btn:hover{background:rgba(251,113,133,.22);}
+.wr-model-btn{padding:.3rem .7rem;border-radius:6px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.22);color:#c084fc;font-size:.72rem;font-weight:600;cursor:pointer;transition:.15s;}
+.wr-model-btn:hover{background:rgba(167,139,250,.2);}
+.wr-export-btn,.wf-export-btn,.nq-export-btn{font-size:.7rem;padding:.28rem .65rem;border-radius:6px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.22);color:#60a5fa;cursor:pointer;transition:.15s;font-weight:600;}
+.wr-export-btn:hover,.wf-export-btn:hover,.nq-export-btn:hover{background:rgba(96,165,250,.2);}
+.wr-guide-btn,.wr-btn,.wr-toggle-btn{font-size:.68rem;padding:.22rem .5rem;border-radius:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+.wr-guide-btn:hover,.wr-btn:hover,.wr-toggle-btn:hover{background:rgba(255,255,255,.1);color:#eee;}
+.wm-btn{font-size:.68rem;padding:.22rem .5rem;border-radius:5px;background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.22);color:#d4a017;cursor:pointer;transition:.15s;}
+.wr-sel{font-size:.72rem;padding:.25rem .5rem;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+
+.wf-gen-btn{display:block;width:100%;padding:.55rem;border-radius:7px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.35);color:#c084fc;font-size:.8rem;font-weight:700;cursor:pointer;transition:.15s;}
+.wf-gen-btn:hover{background:rgba(167,139,250,.28);}
+.wf-gen-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.nq-submit-btn{padding:.4rem 1rem;border-radius:6px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.3);color:#c084fc;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;}
+.nq-submit-btn:hover{background:rgba(167,139,250,.26);}
+.nq-wrong-btn{padding:.4rem .9rem;border-radius:6px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#f87171;font-size:.75rem;font-weight:600;cursor:pointer;transition:.15s;}
+.nq-wrong-btn:hover{background:rgba(239,68,68,.22);}
+
+.tl-chip{font-size:.68rem;padding:.22rem .6rem;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+.tl-chip:hover{background:rgba(255,255,255,.12);}
+.tl-chip.active{background:rgba(250,204,21,.18);border-color:rgba(250,204,21,.4);color:#facc15;font-weight:700;}
+.tl-gen-tab-btn,.tl-gen-btn{width:100%;padding:.42rem;border-radius:7px;background:rgba(250,204,21,.14);border:1px solid rgba(250,204,21,.35);color:#facc15;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;margin-top:.6rem;}
+.tl-gen-tab-btn:hover,.tl-gen-btn:hover{background:rgba(250,204,21,.24);}
+.tl-gen-tab-btn:disabled,.tl-gen-btn:disabled{opacity:.4;cursor:not-allowed;}
+.tl-close{font-size:.75rem;padding:.25rem .6rem;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+.tl-kw-sel{width:100%;font-size:.75rem;padding:.35rem .5rem;background:#1a1a1a;border:1px solid rgba(255,255,255,.12);color:#ddd;border-radius:6px;outline:none;}
+
+.sel-btn{font-size:.68rem;padding:.22rem .5rem;border-radius:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+.sel-btn:hover{background:rgba(255,255,255,.1);}
+.sel-btn.active{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#facc15;}
+
+.ma-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+.ma-btn:hover{background:rgba(255,255,255,.12);color:#eee;}
+.study-close{font-size:.75rem;padding:.25rem .6rem;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#bbb;cursor:pointer;transition:.15s;}
+.study-close:hover{background:rgba(255,255,255,.14);color:#eee;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-logo">
+    <span class="on-badge">ON AIR</span>
+    <span class="logo-text">브리핑</span>
+    <span class="free-badge">FREE</span>
+  </div>
+  <span class="clock" id="clock">00:00:00</span>
+</div>
+
+<div class="kw-bar">
+  <span class="kw-label">키워드 관리 —</span>
+  <div class="kw-chips" id="kw-chips"></div>
+  <div class="kw-actions">
+    <button class="kw-act-btn" onclick="selAll()">전체 선택</button>
+    <button class="kw-act-btn" onclick="selNone()">전체 해제</button>
+  </div>
+</div>
+<div class="kw-bar" style="padding-top:0">
+  <div class="kw-input-wrap">
+    <input class="kw-input" id="kw-input" placeholder="키워드 추가..." onkeydown="if(event.key==='Enter')addKw()">
+    <button class="kw-add-btn" onclick="addKw()">+ 추가</button>
+  </div>
+</div>
+
+<div class="fetch-row">
+  <button class="fetch-btn" id="fetch-btn" onclick="fetchAll()">🔄 뉴스 불러오기</button>
+  <span class="status-txt" id="status"></span>
+  <div id="error-bar" style="display:none;font-size:.68rem;color:#f87171;padding:.2rem .5rem;background:rgba(239,68,68,.08);border-radius:4px;margin-left:.4rem;"></div>
+  <select class="day-sel" id="day-sel" onchange="aDays=+this.value">
+    <option value="1">오늘</option>
+    <option value="7">7일</option>
+    <option value="30">1개월</option>
+  </select>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('news',this)">📰 뉴스</button>
+  <button class="tab-btn" onclick="switchTab('column',this)">📝 칼럼</button>
+  <button class="tab-btn" onclick="switchTab('timeline',this)">📅 타임라인</button>
+  <button class="tab-btn" onclick="switchTab('scrap',this)">⭐ 스크랩 <span class="tc" id="scrap-count">0</span></button>
+  <button class="tab-btn" onclick="switchTab('script',this)">🎬 대본분석</button>
+  <button class="tab-btn" onclick="switchTab('writing',this)">✍️ 작문</button>
+  <button class="tab-btn" onclick="switchTab('score',this)">📊 점수 분석</button>
+</div>
+
+<div id="panel-news" class="tab-panel active">
+  <div id="news-count" style="font-size:.68rem;color:var(--muted);margin-bottom:.6rem;"></div>
+  <div class="news-grid" id="news-grid"></div>
+</div>
+
+<div id="panel-column" class="tab-panel">
+  <div class="news-grid" id="col-grid"></div>
+</div>
+
+<div id="panel-scrap" class="tab-panel">
+  <div class="scrap-grid" id="scrap-grid"></div>
+</div>
+
+<div id="panel-script" class="tab-panel">
+  <div class="sc-controls">
+    <button class="sc-gen-btn" id="sc-btn" onclick="genScript()">🎬 대본 생성</button>
+    <span class="sc-count" id="sc-count-txt"></span>
+    <div class="sc-collapse-btns">
+      <button class="sc-col-btn" onclick="collapseAllCards(true)">전체 접기</button>
+      <button class="sc-col-btn" onclick="collapseAllCards(false)">전체 펼치기</button>
+    </div>
+  </div>
+  <div class="sc-loading" id="sc-loading">대본 생성 중...</div>
+  <div class="sc-empty" id="sc-empty">대본을 생성하면 여기에 표시됩니다.</div>
+  <div class="sc-result" id="sc-result"></div>
+</div>
+
+<div id="panel-timeline" class="tab-panel">
+  <div class="tl-tab-wrap">
+    <div class="tl-tab-header">
+      <div class="tl-tab-controls">
+        <div class="tl-tab-label">기간</div>
+        <div class="tl-chips" id="tl-range-chips">
+          <button class="tl-chip active" data-days="7" onclick="setTLChip(this)">7일</button>
+          <button class="tl-chip" data-days="30" onclick="setTLChip(this)">1개월</button>
+          <button class="tl-chip" data-days="90" onclick="setTLChip(this)">3개월</button>
+          <button class="tl-chip" data-days="180" onclick="setTLChip(this)">6개월</button>
+        </div>
+        <div class="tl-tab-label" style="margin-top:.6rem">키워드</div>
+        <select id="tl-kw-sel2" class="tl-kw-sel">
+          <option value="">전체 키워드</option>
+        </select>
+        <button class="tl-gen-tab-btn" onclick="genTimelineTab()">📅 타임라인 생성</button>
+      </div>
+    </div>
+    <div id="tl-tab-body" class="tl-tab-body">
+      <div class="tl-tab-empty">기간과 키워드를 선택하고 생성을 눌러보세요</div>
+    </div>
+  </div>
+</div>
+
+<div id="panel-writing" class="tab-panel">
+  <div class="wr-controls">
+    <button class="wr-gen-btn" id="wr-gen-btn" onclick="genWriting()">✨ 예제 생성</button>
+    <button class="wr-export-all-btn" onclick="exportAllWriting()" title="전체 워드 내보내기">📄 내려받기</button>
+    <button class="wr-reset-btn" onclick="resetWr()">↺ 초기화</button>
+    <span class="wr-loading" id="wr-loading">✦ 생성 중...</span>
+  </div>
+  <div id="wr-empty" style="color:var(--muted);font-size:.8rem;padding:.8rem 0"></div><div class="wr-result" id="wr-result"></div>
+  <div class="wf-section">
+    <div class="wf-title">📄 내 작문 AI 첨삭</div>
+    <div class="wf-upload-zone" onclick="document.getElementById('wf-file').click()">
+      <div class="wf-upload-icon">📄</div>
+      <div class="wf-upload-text">TXT 또는 DOCX 파일을 클릭해서 업로드</div>
+      <div class="wf-upload-sub">최대 2MB · 입시 작문 첨삭 AI가 분석합니다</div>
+    </div>
+    <input type="file" id="wf-file" accept=".txt,.docx" style="display:none" onchange="wfLoadFile(this)">
+    <div class="wf-file-info" id="wf-file-info"></div>
+    <button class="wf-gen-btn" id="wf-gen-btn" onclick="wfGenFeedback()" disabled>🤖 AI 첨삭 받기</button>
+    <div id="wf-loading" style="display:none;font-size:.72rem;color:var(--muted);padding:.4rem 0">첨삭 분석 중...</div>
+    <div class="wf-result" id="wf-result"></div>
+  </div>
+</div>
+
+<div id="panel-score" class="tab-panel">
+  <div class="score-wrap">
+    <div class="score-section-title">📊 내 실력 점수판</div>
+    <div class="score-subtitle">대본분석 · 작문 항목별 10점 만점 · 항목 클릭 시 보완 공부법</div>
+    <div class="score-group">
+      <div class="score-group-label">🎬 대본분석</div>
+      <div class="score-items" id="score-script-items"></div>
+    </div>
+    <div class="score-group">
+      <div class="score-group-label">✍️ 작문</div>
+      <div class="score-items" id="score-writing-items"></div>
+    </div>
+    <div class="score-overall">
+      <div class="score-overall-label">종합 점수</div>
+      <div class="score-overall-val" id="score-overall-val">--</div>
+    </div>
+    <div class="score-history-wrap">
+      <div class="score-history-title">📈 점수 추이 (최근 10회)</div>
+      <div style="display:flex;gap:.5rem;font-size:.62rem;color:var(--muted);margin-bottom:.4rem">
+        <span style="color:#a78bfa">■ 대본분석</span><span style="color:#4ade80">■ 작문</span>
+      </div>
+      <canvas id="score-trend-chart" height="70" style="width:100%"></canvas>
+    </div>
+  </div>
+</div>
+
+
+<!-- AI 요약 팝업 -->
+<div id="sum-overlay" style="display:none" onclick="closeSummary()">
+  <div class="sum-box" onclick="event.stopPropagation()">
+    <button class="sum-close" onclick="closeSummary()">✕ 닫기</button>
+    <div class="sum-kw" id="sum-kw"></div>
+    <div class="sum-title" id="sum-title"></div>
+    <div class="sum-body" id="sum-body"><div class="sum-loading">요약 생성 중...</div></div>
+    <div class="sum-fetch-row">
+      <button class="fetch-btn" style="font-size:.72rem;padding:.35rem .8rem" onclick="closeSummaryAndFetch()">🔄 이 키워드로 뉴스 불러오기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 타임라인 팝업 -->
+<div id="tl-overlay" style="display:none" onclick="closeTL()">
+  <div class="tl-box" onclick="event.stopPropagation()">
+    <div class="tl-box-header">
+      <div class="tl-title">📅 타임라인</div>
+      <button class="tl-close" onclick="closeTL()">✕</button>
+    </div>
+    <div class="tl-controls">
+      <div style="font-size:.65rem;color:var(--muted);margin-bottom:.3rem">기간</div>
+      <div class="tl-chips" id="tl-range-chips">
+        <button class="tl-chip active" data-days="7" onclick="setTLRange(this)">7일</button>
+        <button class="tl-chip" data-days="30" onclick="setTLRange(this)">1개월</button>
+        <button class="tl-chip" data-days="90" onclick="setTLRange(this)">3개월</button>
+        <button class="tl-chip" data-days="180" onclick="setTLRange(this)">6개월</button>
+      </div>
+      <div style="font-size:.65rem;color:var(--muted);margin:.6rem 0 .3rem">키워드</div>
+      <select id="tl-kw-sel" class="wr-sel" style="width:100%;font-size:.72rem;padding:.3rem .5rem;background:var(--card);border:1px solid var(--border);color:#eee;border-radius:6px">
+        <option value="">전체</option>
+      </select>
+      <button class="tl-gen-tab-btn" onclick="genTL()">📅 타임라인 생성</button>
+    </div>
+    <div id="tl-body" style="margin-top:.8rem"><div style="color:var(--muted);font-size:.78rem;text-align:center;padding:1.5rem">위에서 기간과 키워드를 선택해 생성하세요</div></div>
+  </div>
+</div>
+
+<!-- 근거추출 모달 -->
+<!-- 공부법 팝업 -->
+<div id="study-overlay" style="display:none" onclick="closeStudyModal()">
+  <div class="study-modal" onclick="event.stopPropagation()">
+    <div class="study-modal-header">
+      <div class="study-modal-title" id="study-modal-title">📚 보완 공부법</div>
+      <button class="study-modal-close" onclick="closeStudyModal()">✕ 닫기</button>
+    </div>
+    <div id="study-score-badge"></div>
+    <div id="study-modal-body"></div>
+  </div>
+</div>
+
+<div id="nq-modal-overlay" style="display:none" onclick="closeNewsModal()">
+  <div class="nq-modal" onclick="event.stopPropagation()">
+    <div class="nq-modal-header">
+      <div class="nq-modal-kw" id="nq-modal-kw"></div>
+      <button class="nq-modal-close" onclick="closeNewsModal()">✕ 닫기</button>
+    </div>
+    <div class="nq-modal-title" id="nq-modal-title"></div>
+    <div class="nq-modal-src" id="nq-modal-src"></div>
+    <div id="nq-modal-body"><div class="nq-modal-loading">✍️ 근거 추출 중...</div></div>
+    <div class="nq-modal-answer-section" id="nq-modal-answer" style="display:none">
+      <div class="nq-modal-selected-q" id="nq-modal-selected-q" style="display:none"></div>
+      <div class="nq-modal-tabs">
+        <button class="nq-atab active" onclick="switchAnswerTab('write',this)">✏️ 직접 작성</button>
+        <button class="nq-atab" onclick="switchAnswerTab('upload',this)">📁 파일 업로드</button>
+      </div>
+      <div id="nq-atab-write">
+        <textarea id="nq-answer-ta" class="nq-answer-ta" placeholder="여기에 답안을 작성하세요..."></textarea>
+      </div>
+      <div id="nq-atab-upload" style="display:none">
+        <div class="nq-upload-zone" onclick="document.getElementById('nq-file-input').click()">
+          <div class="nq-upload-icon">📄</div>
+          <div class="nq-upload-text">TXT 또는 DOCX 파일을 클릭해서 업로드</div>
+          <div class="nq-upload-sub">최대 2MB</div>
+        </div>
+        <input type="file" id="nq-file-input" accept=".txt,.docx" style="display:none" onchange="handleNqFile(this)">
+        <div id="nq-file-preview" class="nq-file-preview" style="display:none"></div>
+      </div>
+      <div class="nq-modal-actions">
+        <button class="nq-submit-btn" onclick="submitNqFeedback()">🤖 AI 피드백 받기</button>
+        <button class="nq-wrong-btn" onclick="addNqWrongNote()">❌ 오답노트 추가</button>
+      </div>
+      <div id="nq-feedback-wrap" style="display:none" class="nq-feedback-wrap"></div>
+      <div class="nq-modal-export-row" id="nq-export-row" style="display:none">
+        <button class="nq-export-btn" onclick="exportNqFeedback()">📄 TXT로 내보내기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+const DKW=["공영방송·지상파 위기","OTT 플랫폼","AI·기술","숏폼·플랫폼","K콘텐츠","콘텐츠 윤리·규제","예능·포맷"];
+const KICHUL=new Set(["공영방송·지상파 위기","OTT 플랫폼","AI·기술","숏폼·플랫폼","K콘텐츠","콘텐츠 윤리·규제","예능·포맷"]);
+const COL_SRC=[{url:'http://www.hani.co.kr/rss/opinion/',name:'한겨레'},{url:'https://www.khan.co.kr/rss/rssdata/opinion.xml',name:'경향신문'},{url:'http://rss.donga.com/column.xml',name:'동아일보'},{url:'https://rss.joins.com/joins_opinion_list.xml',name:'중앙일보'},{url:'https://www.chosun.com/arc/outboundfeeds/rss/category/opinion/',name:'조선일보'},{url:'https://www.hankookilbo.com/rss/section/opinion',name:'한국일보'},{url:'https://www.mediatoday.co.kr/rss/allArticle.xml',name:'미디어오늘'},{url:'https://www.pdjournal.com/rss/allArticle.xml',name:'PD저널'},{url:'https://www.mediaus.co.kr/rss/allArticle.xml',name:'미디어스'},{url:'http://www.sisain.co.kr/rss/allArticle.xml',name:'시사IN'},{url:'http://www.ohmynews.com/rss/ohmynews.xml',name:'오마이뉴스'},{url:'https://www.cine21.com/news/rss/',name:'씨네21'},{url:'https://www.artinsight.co.kr/rss/rss.php',name:'아트인사이트'},{url:'https://www.etnews.com/rss/section/section001.xml',name:'전자신문'}];
+const NEWS_SRC=[{url:'https://news.kbs.co.kr/rss/rss.do?catecd=0000',name:'KBS'},{url:'http://imnews.imbc.com/rss/news/news_00.xml',name:'MBC'},{url:'https://news.sbs.co.kr/news/rssVodFeed.do?pmd=News&ctgry=culture',name:'SBS'},{url:'https://www.khan.co.kr/rss/rssdata/culture.xml',name:'경향신문'},{url:'http://www.hani.co.kr/rss/culture/',name:'한겨레'},{url:'https://www.yonhapnews.co.kr/RSS/culture.xml',name:'연합뉴스'},{url:'https://www.etnews.com/rss/section/section001.xml',name:'전자신문'},{url:'https://www.mediatoday.co.kr/rss/allArticle.xml',name:'미디어오늘'}];
+const BH=[8,12,18],KK='news_keywords_v6';
+let kws=[],activeKws=new Set(),aDays=1,scraps={};
+
+function switchTab(t,b){document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('panel-'+t).classList.add('active');if(t==='scrap')renderScraps();if(t==='wrongnote'){renderWrongNotes();updateWrongCount();}if(t==='score')renderScorePanel();if(t==='timeline')initTimelineTab();if(t==='script')scLoadList();if(t==='writing')wrLoad();}
+function setRange(b){document.querySelectorAll('.date-chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');aDays=parseInt(b.dataset.days);const _dc=document.getElementById('date-custom');if(_dc)_dc.classList.toggle('show',aDays===0);}
+function getDF(){if(aDays===0){const _df=document.getElementById('date-from'),_dt=document.getElementById('date-to');const f=_df?_df.value:'',to=_dt?_dt.value:'';return[f?'after:'+f:'',to?'before:'+to:''].filter(Boolean).join('+');}return'when:'+aDays+'d';}
+function getRL(){return{1:'1DAY',7:'7일',30:'1달',365:'1년',0:'직접 지정'}[aDays]||aDays+'일';}
+function loadKw(){if(!localStorage.getItem('kw_reset_v12')){localStorage.removeItem(KK);localStorage.setItem('kw_reset_v12','1');}try{const s=localStorage.getItem(KK);kws=s?JSON.parse(s):[...DKW];}catch(e){kws=[...DKW];}if(!kws.length)kws=[...DKW];DKW.forEach(k=>{if(!kws.includes(k))kws.push(k);});localStorage.setItem(KK,JSON.stringify(kws));activeKws=new Set(kws);renderKw();updSels();}
+function saveKw(){try{localStorage.setItem(KK,JSON.stringify(kws));}catch(e){}}
+function renderKw(){document.getElementById('kw-chips').innerHTML=kws.map(kw=>{const b=KICHUL.has(kw)?'<span style="font-size:.58rem;background:rgba(255,224,51,.18);color:var(--yellow);border-radius:3px;padding:0 4px;font-weight:700;margin-left:2px;">기출</span>':'';const s=kw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");const on=activeKws.has(kw);return'<button class="kw-chip'+(on?' active':'')+'" onclick="toggleKw(\''+s+'\')">'+kw+b+'<span class="del" onclick="delKw(event,\''+s+'\')">✕</span></button>';}).join('');}
+function toggleKw(k){if(activeKws.has(k))activeKws.delete(k);else activeKws.add(k);renderKw();resetWr();}
+function selAll(){activeKws=new Set(kws);renderKw();}
+function resetWr(){wrTopics=[];wrSeenQ=new Set();wrSave();const r=document.getElementById('wr-result');if(r){r.innerHTML='';r.classList.remove('on');}}
+function selNone(){activeKws=new Set();renderKw();}
+function resetKw(){
+  if(confirm('키워드를 기본 7개로 초기화할까요?')){
+    localStorage.setItem(KK,JSON.stringify(DKW));
+    activeKws=new Set(DKW);
+    loadKw();
+  }
+}
+function delKw(e,k){e.stopPropagation();kws=kws.filter(x=>x!==k);activeKws.delete(k);saveKw();renderKw();updSels();}
+function addKw(){const inp=document.getElementById('kw-input'),v=inp.value.trim();if(!v||kws.includes(v)){inp.value='';return;}kws.push(v);activeKws.add(v);saveKw();renderKw();updSels();inp.value='';}
+document.getElementById('kw-input').addEventListener('keydown',e=>{if(e.key==='Enter')addKw();});
+function updSels(){['tl-kw-sel'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML=kws.map(k=>'<option value="'+k+'">'+k+'</option>').join('');if(kws.length)s.value=s.value&&kws.includes(s.value)?s.value:kws[0];});}
+
+function tick(){const n=new Date(),p=x=>String(x).padStart(2,'0');document.getElementById('clock').textContent=p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());}
+setInterval(tick,1000);tick();
+
+const isKo=s=>/[가-힣]/.test(s);
+const KR_DOMAINS=['kbs.co.kr','imbc.com','sbs.co.kr','jtbc.co.kr','ytn.co.kr',
+  'yonhapnews.co.kr','yna.co.kr','hani.co.kr','khan.co.kr','donga.com',
+  'chosun.com','joins.com','joongang.co.kr','hankookilbo.com','ohmynews.com',
+  'mediatoday.co.kr','pdjournal.com','mediaus.co.kr','sisain.co.kr',
+  'cine21.com','etnews.com','zdnet.co.kr','bloter.net','newsis.com',
+  'munhwa.com','hankyung.com','mk.co.kr','sedaily.com','segyetimes.com'];
+const isKrDomain=url=>{try{const h=new URL(url).hostname.replace(/^www\./,'');return KR_DOMAINS.some(d=>h===d||h.endsWith('.'+d));}catch(e){return false;}};
+const isKrNews=item=>isKrDomain(item.link||'')||isKo(item.title||'');
+
+const strip=s=>(s||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
+const exSrc=t=>{const m=(t||'').match(/ - ([^-]+)$/);return m?m[1].trim():'뉴스';};
+function fmtD(s){if(!s)return'';const d=new Date(s);if(isNaN(d))return s;const df=Math.floor((new Date()-d)/60000);if(df<60)return df+'분 전';if(df<1440)return Math.floor(df/60)+'시간 전';return(d.getMonth()+1)+'/'+(d.getDate());}
+function rawTs(s){if(!s)return 0;const d=new Date(s);return isNaN(d)?0:d.getTime();}
+async function getRss(url){try{const r=await fetch('/api/rss?url='+encodeURIComponent(url));const d=await r.json();return d.items||[];}catch(e){return[];}}
+
+async function fetchAll(){
+  const selected=[...activeKws];
+  if(!selected.length){alert('키워드를 하나 이상 선택해주세요');return;}
+  const btn=document.getElementById('fetch-btn'),st=document.getElementById('status'),eb=document.getElementById('error-bar');
+  btn.disabled=true;eb.style.display='none';st.className='live';
+  st.textContent='키워드 '+selected.length+'개 연관어 분석 중...';
+  const sk=Array(6).fill(0).map(()=>'<div class="sk"><div class="skel sm"></div><div class="skel lg"></div><div class="skel"></div><div class="skel sm"></div></div>').join('');
+  document.getElementById('news-grid').innerHTML=sk;document.getElementById('col-grid').innerHTML=sk;
+  try{
+    const df=getDF();
+    // 1. 모든 선택 키워드 연관어 병렬 확장 (캐시 활용)
+    st.textContent='키워드 '+selected.length+'개 연관어 분석 중...';
+    const allTermsMap={};
+    await Promise.all(selected.map(async kw=>{
+      try{
+        const ck='expand_'+kw+'_'+new Date().toDateString(),cached=localStorage.getItem(ck);
+        if(cached){allTermsMap[kw]=JSON.parse(cached);}
+        else{const r=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'expand',keyword:kw})});const d=await r.json();if(d.terms){allTermsMap[kw]=d.terms.slice(0,6);localStorage.setItem(ck,JSON.stringify(allTermsMap[kw]));}}
+      }catch(e){allTermsMap[kw]=[];}
+    }));
+    // 2. 전체 검색 쿼리 생성
+    const allQueries=[];
+    selected.forEach(kw=>{
+      const terms=allTermsMap[kw]||[];
+      const base=[kw,kw+' 방송',kw+' 미디어'].map(q=>df?q+' '+df:q);
+      [...base,...terms.slice(0,4).map(t=>df?t+' '+df:t)].forEach(q=>allQueries.push({q,kw}));
+    });
+    st.textContent='뉴스 수집 중... (키워드 '+selected.length+'개)';
+    // 3. 병렬 수집
+    const[gR,nsR,cR]=await Promise.all([
+      Promise.all(allQueries.map(({q})=>getRss('https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=ko&gl=KR&ceid=KR:ko'))),
+      Promise.all(NEWS_SRC.map(s=>fetch('/api/rss?url='+encodeURIComponent(s.url)).then(r=>r.json()).then(d=>({items:d.items||[],name:s.name})).catch(()=>null))),
+      Promise.all(COL_SRC.map(s=>fetch('/api/rss?url='+encodeURIComponent(s.url)).then(r=>r.json()).then(d=>({items:d.items||[],name:s.name})).catch(()=>null)))
+    ]);
+    // 4. 전체 검색어 Set 생성
+    const allTermsFlat=new Set(selected.map(k=>k.toLowerCase()));
+    Object.values(allTermsMap).flat().forEach(t=>allTermsFlat.add(t.toLowerCase()));
+    const sU=new Set(),sT=new Set(),sTK=new Set();
+    const normTitle=t=>t.replace(/[\[\]()【】「」''""<>《》\s·…]+/g,'').replace(/[a-zA-Z]/g,'').slice(0,18);
+    let nA=[];
+    for(const items of gR){for(const item of items){const title=strip(item.title);const tk=normTitle(title);if(sU.has(item.link)||sT.has(title)||sTK.has(tk)||!isKrNews(item)||!preFilterTitle(title))continue;sU.add(item.link);sT.add(title);sTK.add(tk);          nA.push({title,url:item.link,source:item.author||exSrc(item.title),date:fmtD(item.pubDate),rawDate:item.pubDate||'',desc:strip(item.description||'').slice(0,400)});}}
+    for(const r of nsR){if(!r?.items?.length)continue;for(const item of r.items){const title=strip(item.title||'');if(!isKo(title))continue;const tl=title.toLowerCase(),desc=strip(item.description||'').toLowerCase();if(![...allTermsFlat].some(w=>w.length>1&&(tl.includes(w)||desc.includes(w))))continue;const a={title,url:item.link,source:r.name,date:fmtD(item.pubDate),rawDate:item.pubDate||'',desc:strip(item.description||'').slice(0,400)};if(sU.has(a.url)||sT.has(a.title))continue;sU.add(a.url);sT.add(a.title);nA.push(a);}}
+    if(!nA.length)throw new Error('검색 결과가 없습니다. 기간을 늘려보세요.');
+    let cA=[];
+    for(const r of cR){if(!r?.items?.length)continue;for(const item of r.items){const title=strip(item.title||'');if(!isKo(title))continue;const tl=title.toLowerCase(),desc=strip(item.description||'').toLowerCase();if(![...allTermsFlat].some(w=>w.length>1&&(tl.includes(w)||desc.includes(w))))continue;const a={title,url:item.link,source:r.name,date:fmtD(item.pubDate),rawDate:item.pubDate||'',desc:strip(item.description||'').slice(0,400)};if(sU.has(a.url)||sT.has(a.title))continue;sU.add(a.url);sT.add(a.title);cA.push(a);}}
+    // 5-1. 본문 밀도 선필터 (API 비용 없음)
+    const mediaKws=['방송','미디어','OTT','콘텐츠','유튜브','넷플릭스','티빙','웨이브','쿠팡플레이','디즈니','크리에이터','영상','제작','PD','기자','언론','뉴스','드라마','예능','다큐','플랫폼','스트리밍','숏폼','틱톡','인스타','채널','방영','편성','시청','광고','저작권','저널리즘','수신료','공영','지상파','케이블','종편'];
+    function densityScore(a){const txt=(a.title+' '+(a.desc||'')).toLowerCase();return mediaKws.filter(k=>txt.includes(k)).length;}
+    nA=nA.filter(a=>densityScore(a)>=1);
+    cA=cA.filter(a=>densityScore(a)>=1);
+
+    // 5-2. AI 필터 (선필터 후 최대 15개 — 비용 절감)
+    st.textContent='✦ AI 관련성 분석 중...';
+    let fN=nA,fC=cA;
+    try{
+      const all=[...nA,...cA].slice(0,15);
+      const fr=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter',headlines:all.map(a=>a.title),descriptions:all.map(a=>a.desc||''),keyword:'미디어·방송 관련 이슈'})});
+      const fd=await fr.json();
+      if(fd.results){const sm={},rs=new Set();fd.results.forEach(r=>{if(r.summary)sm[r.idx]=r.summary;if(r.relevant)rs.add(r.idx);});fN=nA.map((a,i)=>({...a,aiSummary:sm[i]||''})).filter((_,i)=>rs.has(i));fC=cA.map((a,i)=>({...a,aiSummary:sm[nA.length+i]||''})).filter((_,i)=>rs.has(nA.length+i));}
+    }catch(e){console.warn('AI 필터 실패');}
+    // 6. 전체 최신순 정렬
+    fN.sort((a,b)=>rawTs(b.rawDate)-rawTs(a.rawDate));
+    fC.sort((a,b)=>rawTs(b.rawDate)-rawTs(a.rawDate));
+    const activeKw = (window._activeKwList||[])[0] || '';
+    renderGrid('news-grid',fN,'news',activeKw);
+    renderGrid('col-grid',fC,'col',activeKw);
+    document.getElementById('news-count').textContent=fN.length;
+    const _cc=document.getElementById('col-count');if(_cc)_cc.textContent=fC.length;
+    st.className='live';
+    st.textContent='뉴스 '+fN.length+'건 · 칼럼 '+fC.length+'건 · 키워드 '+selected.length+'개 · '+getRL()+' · '+new Date().toLocaleTimeString('ko-KR');
+    const _sb=document.getElementById('sum-btn');if(_sb)_sb.disabled=false;
+    window._hl=[...fN,...fC].map(a=>a.title);
+    window._activeKwList=selected;
+    closeSummary();
+    // 예제가 없을 때만 자동 생성 (기존 예제 유지)
+    if(wrTopics.length===0) genWriting();
+  }catch(err){
+    const eh='<div class="empty"><div class="empty-icon">⚠️</div><p><strong>불러오기 실패</strong>'+err.message+'</p></div>';
+    document.getElementById('news-grid').innerHTML=eh;document.getElementById('col-grid').innerHTML=eh;
+    eb.textContent='오류: '+err.message;eb.style.display='block';st.className='';st.textContent='다시 시도해 주세요';
+  }
+  btn.disabled=false;
+}
+
+
+const TRASH_KEYWORDS = ['열애','교제','결혼','이혼','임신','출산','팬미팅','생일파티','화보','데이트','골','득점','승리','패배','우승','준우승','경기 결과','이적','계약','선수','감독','축구','야구','농구','배구','골프','수영','육상','주가','코스피','코스닥','코인','비트코인','부동산','청약','금리','환율','펀드','ETF','출시','론칭','오픈','개점','신제품','할인','이벤트','프로모션','지역','구청','군청','시청','축제','행사','봉사','기부금','장학금'];
+const KEEP_KEYWORDS = ['OTT','넷플릭스','티빙','웨이브','왓챠','쿠팡플레이','디즈니','애플TV','방송','미디어','콘텐츠 산업','플랫폼','저널리즘','언론','크리에이터','수신료','공영방송','KBS','MBC','SBS','지상파','숏폼','알고리즘','저작권','규제','심의','AI 콘텐츠','딥페이크','버추얼','K콘텐츠','한류'];
+function preFilterTitle(title) {
+  const t = title.toLowerCase();
+  if (KEEP_KEYWORDS.some(k => t.includes(k.toLowerCase()))) return true;
+  if (TRASH_KEYWORDS.some(k => t.includes(k.toLowerCase()))) return false;
+  return true;
+}
+
+function renderGrid(id,arr,type,kw){
+  if(id==='news-grid') _nqCards = arr;
+  kw = kw || (window._activeKwList||[])[0] || '';
+  const kwList = window._activeKwList || [];
+  const KW_SUB = {
+    '공영방송·지상파 위기':['공영방송','수신료','지상파','일일드라마','방송독립','방송파업','KBS','MBC','SBS'],
+    'OTT 플랫폼':['OTT','넷플릭스','디즈니','웨이브','왓챠','티빙','쿠팡','구독','스트리밍'],
+    'AI·기술':['AI','인공지능','딥페이크','버추얼','디에이징','챗GPT','생성형','알고리즘','로봇'],
+    '숏폼·플랫폼':['숏폼','릴스','쇼츠','틱톡','유튜브','크리에이터','버티컬','수익화'],
+    'K콘텐츠':['K드라마','한류','웹툰','K콘텐츠','글로벌','시즌','드라마','영화'],
+    '콘텐츠 윤리·규제':['윤리','저작권','규제','심의','가짜뉴스','미디어','저널리즘','신뢰','언론'],
+    '예능·포맷':['예능','관찰','포맷','버라이어티','리얼리티','오디션','방송']
+  };
+  arr = arr.map(a => {
+    if (kwList.length && !a.relKws) {
+      const txt = (a.title + ' ' + (a.desc||'')).toLowerCase();
+      a.relKws = kwList.filter(grp => {
+        const subs = KW_SUB[grp] || [grp];
+        return subs.some(w => txt.includes(w.toLowerCase()));
+      }).slice(0,3);
+    }
+    return a;
+  });
+  if(!arr.length){document.getElementById(id).innerHTML='<div class="empty"><div class="empty-icon">'+(type==='col'?'✍️':'📰')+'</div><p><strong>'+(type==='col'?'관련 칼럼 없음':'관련 뉴스 없음')+'</strong>기간을 늘려보세요</p></div>';return;}
+  document.getElementById(id).innerHTML=arr.map((a,i)=>{
+    const iS=!!scraps[a.url],su=a.url.replace(/'/g,"\\'"),st=a.title.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return '<div class="news-card" style="animation-delay:'+i*.04+'s">'
+      +'<div class="card-top"><span class="card-idx">'+String(i+1).padStart(2,'0')+'</span><span class="card-src">'+a.source+'</span></div>'
+      +'<div class="card-title"><a href="'+a.url+'" target="_blank" rel="noopener">'+a.title+'</a></div>'
+      +(a.aiSummary?'<div class="card-ai"><span class="ai-badge">AI</span>'+a.aiSummary+'</div>':'')
+      +(a.relKws&&a.relKws.length?'<div class="card-kws">'+a.relKws.map(k=>'<span class="card-kw-tag">'+k+'</span>').join('')+'</div>':'')
+      +'<div class="card-foot"><span class="card-date">'+a.date+'</span>'
+      +'<button class="scrap-btn'+(iS?' on':'')+'" onclick="toggleScrap(this,\''+su+'\',\''+st+'\',\''+a.source+'\',\''+a.date+'\')">'+(iS?'✔ 스크랩됨':'＋ 스크랩')+'</button>'
+      +'<button class="nq-btn" onclick="openNewsModal('+i+')">✍️ 근거추출</button>'
+      +'</div>'
+      +'<div class="nq-wrap" id="nq-'+i+'"></div>'
+      +'<div class="my-answer-wrap" id="ma-'+i+'" style="display:none">'
+        +'<textarea class="my-answer-ta" placeholder="내 답안을 여기에 작성하세요..."></textarea>'
+        +'<div class="my-answer-actions">'
+          +'<button class="ma-btn ma-save" onclick="saveMyAnswer(this,'+i+')">💾 저장</button>'
+          +'<button class="ma-btn ma-wrong" onclick="addWrongNote(this,'+i+')">❌ 오답노트 추가</button>'
+          +'<button class="ma-btn ma-feedback" onclick="requestAnswerFeedback(this,'+i+')">🤖 AI 피드백</button>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+async function runSummary(){
+  const hl=window._hl;if(!hl?.length)return;
+  const btn=document.getElementById('sum-btn'),wrap=document.getElementById('sum-overlay'),body=document.getElementById('sum-body');
+  btn.disabled=true;document.getElementById('sum-kw').textContent=(window._activeKwList||[]).slice(0,3).join(', ')+(window._activeKwList&&window._activeKwList.length>3?' 외'+(window._activeKwList.length-3)+'개':'');
+  body.innerHTML='<span style="color:var(--muted)">AI가 분석 중...</span>';
+  wrap.classList.add('on');wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+  try{const r=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({headlines:hl.slice(0,15),keyword:document.getElementById('tl-kw-sel')?.value||''})});const d=await r.json();if(!r.ok)throw new Error(d.error||'요약 실패');body.textContent=d.summary;}
+  catch(e){body.textContent='⚠️ 요약 실패: '+e.message;}
+  btn.disabled=false;
+}
+
+// ── 예상문제 생성 ──
+async function genNewsQuestion(btn) {
+  const title = decodeURIComponent(btn.dataset.title||'');
+  const summary = decodeURIComponent(btn.dataset.summary||'');
+  const kw = decodeURIComponent(btn.dataset.kw||'');
+  const cardIdx = btn.closest('.news-card') ? [...document.querySelectorAll('.news-card')].indexOf(btn.closest('.news-card')) : 0;
+  const wrap = document.getElementById('nq-' + cardIdx);
+  const maWrap = document.getElementById('ma-' + cardIdx);
+  if (!wrap) return;
+  btn.disabled = true;
+  wrap.innerHTML = '<div class="nq-loading">💡 예상문제 생성 중...</div>';
+  try {
+    const res = await fetch('/api/summarize', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({mode:'newsQuestion', title, summary, keyword:kw})
+    });
+    const d = await res.json();
+    if (!d.questions?.length) throw new Error('질문 없음');
+    wrap.innerHTML = '<div class="nq-list">' + d.questions.map((q,qi) => `
+      <div class="nq-item">
+        <div class="nq-type">${q.type||''} <span class="nq-diff ${q.difficulty||'중'}">${q.difficulty||'중'}</span></div>
+        <div class="nq-q">${q.question||''}</div>
+        <div class="nq-hint">💡 ${(q.hint||[]).join(' · ')}</div>
+        <div style="margin-top:.4rem">
+          <button class="ma-btn ma-save" style="font-size:.62rem" onclick="toggleAnswerBox(${cardIdx},${qi})">✏️ 내 답안 작성</button>
+        </div>
+      </div>`).join('') + '</div>';
+    // 내 답안 영역에 문제 저장
+    if (maWrap) {
+      maWrap.dataset.questions = JSON.stringify(d.questions);
+      maWrap.dataset.title = title;
+      maWrap.dataset.kw = kw;
+    }
+  } catch(e) {
+    wrap.innerHTML = '<div class="nq-loading">⚠️ 생성 실패: ' + e.message + '</div>';
+  }
+  btn.disabled = false;
+}
+
+function toggleAnswerBox(cardIdx, qIdx) {
+  const maWrap = document.getElementById('ma-' + cardIdx);
+  if (!maWrap) return;
+  maWrap.style.display = maWrap.style.display === 'none' ? 'block' : 'none';
+  maWrap.dataset.qidx = qIdx;
+  const qs = JSON.parse(maWrap.dataset.questions||'[]');
+  const q = qs[qIdx];
+  if (q) {
+    maWrap.querySelector('.my-answer-ta').placeholder = '[' + (q.type||'') + '] ' + (q.question||'');
+  }
+}
+
+// ── 내 답안 저장 ──
+function saveMyAnswer(btn, cardIdx) {
+  const maWrap = document.getElementById('ma-' + cardIdx);
+  const ta = maWrap.querySelector('.my-answer-ta');
+  const ans = ta.value.trim();
+  if (!ans) return;
+  const qs = JSON.parse(maWrap.dataset.questions||'[]');
+  const qIdx = parseInt(maWrap.dataset.qidx||'0');
+  const q = qs[qIdx] || {};
+  const saved = JSON.parse(localStorage.getItem('myAnswers')||'[]');
+  saved.unshift({
+    id: Date.now(),
+    date: new Date().toLocaleDateString('ko-KR'),
+    kw: maWrap.dataset.kw||'',
+    title: maWrap.dataset.title||'',
+    question: q.question||'',
+    type: q.type||'',
+    answer: ans
+  });
+  localStorage.setItem('myAnswers', JSON.stringify(saved.slice(0,100)));
+  btn.textContent = '✅ 저장됨';
+  setTimeout(()=>{ btn.textContent='💾 저장'; }, 1500);
+}
+
+// ── 오답노트 추가 ──
+function addWrongNote(btn, cardIdx) {
+  const maWrap = document.getElementById('ma-' + cardIdx);
+  const ta = maWrap.querySelector('.my-answer-ta');
+  const ans = ta.value.trim();
+  const qs = JSON.parse(maWrap.dataset.questions||'[]');
+  const qIdx = parseInt(maWrap.dataset.qidx||'0');
+  const q = qs[qIdx] || {};
+  const notes = JSON.parse(localStorage.getItem('wrongNotes')||'[]');
+  notes.unshift({
+    id: Date.now(),
+    date: new Date().toLocaleDateString('ko-KR'),
+    kw: maWrap.dataset.kw||'',
+    title: maWrap.dataset.title||'',
+    question: q.question||'',
+    type: q.type||'',
+    hint: q.hint||[],
+    answer: ans
+  });
+  localStorage.setItem('wrongNotes', JSON.stringify(notes.slice(0,200)));
+  renderWrongNotes();
+  updateWrongCount();
+  btn.textContent = '✅ 추가됨';
+  setTimeout(()=>{ btn.textContent='❌ 오답노트 추가'; }, 1500);
+}
+
+// ── AI 피드백 요청 ──
+async function requestAnswerFeedback(btn, cardIdx) {
+  const maWrap = document.getElementById('ma-' + cardIdx);
+  const ta = maWrap.querySelector('.my-answer-ta');
+  const ans = ta.value.trim();
+  if (!ans) { alert('먼저 답안을 작성해주세요.'); return; }
+  btn.disabled = true; btn.textContent = '🤖 분석 중...';
+  try {
+    const res = await fetch('/api/summarize', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({mode:'writingFeedback', essay: ans})
+    });
+    const d = await res.json();
+    // 피드백 결과를 답안 아래에 표시
+    let fbHtml = `<div style="margin-top:.6rem;padding:.6rem .8rem;background:rgba(192,132,252,.06);border-radius:7px;border:1px solid rgba(192,132,252,.15)">`;
+    fbHtml += `<div style="font-size:.7rem;font-weight:700;color:#c084fc;margin-bottom:.4rem">🤖 AI 피드백</div>`;
+    if (d.score) fbHtml += `<div style="font-size:.78rem;color:#eee;margin-bottom:.3rem">총점: <strong>${d.score}</strong>점 · ${d.summary||''}</div>`;
+    if (d.suggestions?.length) fbHtml += `<div style="font-size:.72rem;color:#aaa">${d.suggestions.map(s=>'• '+s).join('<br>')}</div>`;
+    fbHtml += '</div>';
+    maWrap.insertAdjacentHTML('beforeend', fbHtml);
+  } catch(e) {
+    alert('피드백 실패: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = '🤖 AI 피드백';
+}
+
+// ── 오답노트 렌더링 ──
+function renderWrongNotes() {
+  const wrap = document.getElementById('wrong-list-wrap');
+  if (!wrap) return;
+  const notes = JSON.parse(localStorage.getItem('wrongNotes')||'[]');
+  if (!notes.length) {
+    wrap.innerHTML = '<div class="empty-state">오답노트가 없어요.<br>뉴스 예상문제에서 답안을 작성하고 ❌ 버튼을 눌러보세요.</div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="wrong-list">' + notes.map(n => `
+    <div class="wrong-item" data-id="${n.id}">
+      <div class="wrong-item-header">
+        <span class="wrong-kw">${n.kw||''} · ${n.type||''}</span>
+        <span class="wrong-date">${n.date||''}</span>
+      </div>
+      <div class="wrong-q">${n.question||''}</div>
+      ${n.hint?.length ? '<div style="font-size:.65rem;color:var(--muted);margin-bottom:.3rem">💡 ' + n.hint.join(' · ') + '</div>' : ''}
+      ${n.answer ? '<div style="font-size:.7rem;color:#aaa;margin-bottom:.4rem;padding:.3rem .5rem;background:rgba(255,255,255,.03);border-radius:4px">내 답안: ' + n.answer.slice(0,80) + (n.answer.length>80?'...':'') + '</div>' : ''}
+      <div style="display:flex;gap:.4rem">
+        <button class="wrong-retry" onclick="retryWrong(${n.id})">🔄 다시 풀기</button>
+        <button class="wrong-del" onclick="deleteWrong(${n.id})">삭제</button>
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+function updateWrongCount() {
+  const notes = JSON.parse(localStorage.getItem('wrongNotes')||'[]');
+  const el = document.getElementById('wrong-count');
+  if (el) el.textContent = notes.length;
+}
+
+function clearWrongNotes() {
+  if (!confirm('오답노트를 전부 삭제할까요?')) return;
+  localStorage.removeItem('wrongNotes');
+  renderWrongNotes();
+  updateWrongCount();
+}
+
+function deleteWrong(id) {
+  const notes = JSON.parse(localStorage.getItem('wrongNotes')||'[]');
+  localStorage.setItem('wrongNotes', JSON.stringify(notes.filter(n=>n.id!==id)));
+  renderWrongNotes();
+  updateWrongCount();
+}
+
+function retryWrong(id) {
+  const notes = JSON.parse(localStorage.getItem('wrongNotes')||'[]');
+  const n = notes.find(x=>x.id===id);
+  if (!n) return;
+  // 작문 탭으로 이동 후 문제 표시
+  const tabBtn = document.querySelector('.wr-tab');
+  if (tabBtn) tabBtn.click();
+  alert('[다시 풀기]\n\n' + n.question + '\n\n힌트: ' + (n.hint||[]).join(', '));
+}
+
+function closeSummary(){document.getElementById('sum-overlay').classList.remove('on');document.getElementById('sum-body').textContent='';}
+
+/* ── 스크랩 ── */
+function loadScraps(){try{scraps=JSON.parse(localStorage.getItem('scraps_v1')||'{}');}catch(e){scraps={};}updSC();}
+function saveScraps(){try{localStorage.setItem('scraps_v1',JSON.stringify(scraps));}catch(e){}}
+function updSC(){document.getElementById('scrap-count').textContent=Object.keys(scraps).length;}
+function toggleScrap(btn,url,title,source,date){
+  if(scraps[url]){delete scraps[url];btn.className='scrap-btn';btn.textContent='＋ 스크랩';}
+  else{scraps[url]={title,url,source,date,keyword:document.getElementById('tl-kw-sel')?.value||'',memo:'',savedAt:new Date().toLocaleDateString('ko-KR')};btn.className='scrap-btn on';btn.textContent='✔ 스크랩됨';}
+  saveScraps();updSC();
+}
+function renderScraps(){
+  const con=document.getElementById('scrap-grid'),list=Object.values(scraps);
+  if(!list.length){con.innerHTML='<div class="empty"><div class="empty-icon">🔖</div><p><strong>스크랩한 기사가 없어요</strong>뉴스/칼럼 카드 하단의<br>「스크랩」 버튼을 눌러보세요</p></div>';return;}
+  con.innerHTML='<div class="news-grid">'+list.map((s,i)=>{
+    const su=s.url.replace(/'/g,"\\'");
+    return '<div class="news-card" style="animation-delay:'+i*.05+'s">'
+      +'<div class="card-top"><span class="card-idx">'+String(i+1).padStart(2,'0')+'</span><span class="card-src">'+s.source+'</span></div>'
+      +'<div class="card-title"><a href="'+s.url+'" target="_blank" rel="noopener">'+s.title+'</a></div>'
+      +(s.keyword?'<div class="card-kws"><span class="card-kw-tag">'+s.keyword+'</span></div>':'')
+      +'<div class="card-foot"><span class="card-date">저장 '+s.savedAt+'</span>'
+      +'<button class="scrap-btn on" onclick="delScrap(\''+su+'\')">✔ 스크랩됨</button>'
+      +'</div></div>';
+  }).join('')+'</div>';
+}
+function delScrap(url){delete scraps[url];saveScraps();updSC();renderScraps();}
+function updMemo(url,memo){if(scraps[url]){scraps[url].memo=memo;saveScraps();}}
+
+/* ── 타임라인 ── */
+async function fetchTimeline(){
+  const kw=document.getElementById('tl-kw-sel')?.value||'',days=parseInt(document.getElementById('tl-range-sel')?.value||'7');
+  const btn=document.getElementById('tl-btn'),con=document.getElementById('tl-container');
+  if(!kw)return;btn.disabled=true;
+  con.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>타임라인 수집 중...</p></div>';
+  try{
+    const qs=[kw,kw+' 방송',kw+' 미디어'].map(q=>q+' when:'+days+'d');
+    const results=await Promise.all(qs.map(q=>getRss('https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=ko&gl=KR&ceid=KR:ko')));
+    const seen=new Set();let items=[];
+    for(const list of results){for(const item of list){const title=strip(item.title);if(seen.has(item.link)||!isKrNews(item))continue;seen.add(item.link);const d=new Date(item.pubDate);if(!isNaN(d))items.push({title,url:item.link,source:item.author||exSrc(item.title),pubDate:d});}}
+    if(!items.length){con.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p><strong>결과 없음</strong>기간을 늘리거나 다른 키워드를 시도해보세요</p></div>';btn.disabled=false;return;}
+    /* 최신순 정렬 후 날짜별 그룹 */
+    items.sort((a,b)=>b.pubDate-a.pubDate);
+    const groups={};
+    items.forEach(item=>{
+      const key=item.pubDate.getFullYear()+'.'+(String(item.pubDate.getMonth()+1).padStart(2,'0'))+'.'+String(item.pubDate.getDate()).padStart(2,'0');
+      if(!groups[key])groups[key]=[];groups[key].push(item);
+    });
+    con.innerHTML='<div class="tl-wrap">'+Object.entries(groups).map(([date,list])=>
+      '<div class="tl-group"><div class="tl-date">'+date+'</div><div class="tl-items">'
+      +list.map(a=>'<div class="tl-item"><div class="tl-item-title"><a href="'+a.url+'" target="_blank" rel="noopener">'+a.title+'</a></div><div class="tl-item-meta">'+a.source+' · '+a.pubDate.getHours()+':'+String(a.pubDate.getMinutes()).padStart(2,'0')+'</div></div>').join('')
+      +'</div></div>').join('')+'</div>';
+  }catch(e){con.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p><strong>오류</strong>'+e.message+'</p></div>';}
+  btn.disabled=false;
+}
+
+/* ── 작문 주제 ── */
+let wrTopics=[];  // 누적 저장
+let wrSeenQ=new Set();  // 중복 필터
+const WR_TOPICS_KEY='wr_topics_v1';
+function wrSave(){try{const r=document.getElementById('wr-result');localStorage.setItem(WR_TOPICS_KEY,JSON.stringify({topics:wrTopics,html:r?r.innerHTML:''}));}catch(e){}}
+function wrLoad(){try{const s=localStorage.getItem(WR_TOPICS_KEY);if(!s)return;const d=JSON.parse(s);if(Array.isArray(d)){wrTopics=d;wrSeenQ=new Set(wrTopics.map(t=>t.question||''));return;}if(d.topics){wrTopics=d.topics;wrSeenQ=new Set(wrTopics.map(t=>t.question||''));}if(d.html){const r=document.getElementById('wr-result');if(r&&d.html){r.innerHTML=d.html;}}}catch(e){}}
+
+function renderPlanBox(p) {
+  if (!p) return '';
+  const epHtml = (p.episodes||[]).map(e =>
+    '<div class="wr-plan-ep"><b>' + (e.ep||'') + ' ' + (e.title||'') + '</b>' + (e.desc||'') + '</div>'
+  ).join('');
+  return '<div class="wr-plan-box">'
+    + '<div class="wr-plan-title">📋 기획안 개요</div>'
+    + '<div class="wr-plan-row"><span class="wr-plan-key">프로그램명</span><span class="wr-plan-val">' + (p.programTitle||'') + '</span></div>'
+    + '<div class="wr-plan-row"><span class="wr-plan-key">포맷</span><span class="wr-plan-val">' + (p.format||'') + '</span></div>'
+    + '<div class="wr-plan-row"><span class="wr-plan-key">타깃</span><span class="wr-plan-val">' + (p.target||'') + '</span></div>'
+    + '<div class="wr-plan-row"><span class="wr-plan-key">편성 채널</span><span class="wr-plan-val">' + (p.channel||'') + '</span></div>'
+    + '<div class="wr-plan-row"><span class="wr-plan-key">콘셉트</span><span class="wr-plan-val">' + (p.concept||'') + '</span></div>'
+    + (epHtml ? '<div class="wr-plan-ep-list">' + epHtml + '</div>' : '')
+    + '<div class="wr-plan-row" style="margin-top:.5rem"><span class="wr-plan-key">기획 의도</span><span class="wr-plan-val" style="color:#c084fc;">' + (p.point||'') + '</span></div>'
+    + '</div>';
+}
+
+async function genWriting(){
+  // 셀렉터 직접 선택 시 우선, 아니면 activeKws에서 랜덤
+  const kwPool=[...activeKws];
+  const usedKws=wrTopics.map(t=>t._kw||'');
+  const unusedPool=kwPool.filter(k=>!usedKws.includes(k));
+  const pickPool=unusedPool.length?unusedPool:kwPool;
+  const kw=pickPool[Math.floor(Math.random()*pickPool.length)]||'';
+  const btn=document.getElementById('wr-gen-btn'),loading=document.getElementById('wr-loading'),result=document.getElementById('wr-result'),empty=document.getElementById('wr-empty');
+  if(!kw)return;
+  btn.disabled=true;loading.classList.add('on');if(empty)empty.style.display='none';
+  try{
+    // 이미 생성된 유형+문제+태그 AI에게 전달 — 중복 방지
+    const usedTitles=wrTopics.map(t=>t.title);
+    const usedQuestions=wrTopics.map(t=>t.question.slice(0,30));
+    const usedTags=wrTopics.map(t=>(t.tags||[]).join(','));
+    const usedTypes=wrTopics.map(t=>t.type||'');
+    const r=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'writing',keyword:kw,usedTitles,usedQuestions,usedTags,usedTypes})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error||'생성 실패');
+    const topics=d.topics||[];
+    // 중복 필터링 — 유형+앞30자+태그 기준
+    topics.forEach(t=>{
+      const qKey=t.title+t.question.slice(0,30)+(t.tags||[]).join('');
+      if(!wrSeenQ.has(qKey)){wrSeenQ.add(qKey);t._kw=kw;wrTopics.push(t);}
+    });
+    wrSave();
+    const allTopics=wrTopics;
+    result.innerHTML=allTopics.map((t,i)=>{
+      const idx=i;
+      const sk=t.searchKeyword||kw;
+      const newsUrl='https://news.google.com/rss/search?q='+encodeURIComponent(sk+' 방송 미디어')+'&hl=ko&gl=KR&ceid=KR:ko';
+      return '<div class="wr-card" style="animation-delay:'+i*.1+'s" id="wc'+i+'">'
+        +'<div class="wr-num">작문 예제 '+String(i+1).padStart(2,'0')+' · '+t.title+'</div>'
+        +(t.plan ? renderPlanBox(t.plan) : '<div class="wr-question">'+t.question+'</div>')
+        +'<div class="wr-hint-label">'+(t.plan?'기획 포인트':'작성 포인트')+'</div>'
+        +'<div class="wr-hint">'+(t.hint||[]).map(h=>'<div class="wr-hint-item">'+h+'</div>').join('')+'</div>'
+        +'<div class="wr-foot">'
+        +'<div class="wr-tags">'+(t.tags||[]).map(tag=>'<span class="wr-tag">'+tag+'</span>').join('')+'</div>'
+        +'<button class="wr-news-btn" data-sk="'+sk+'" data-idx="'+idx+'" onclick="loadWrNews(this)">📰 관련 기사 보기</button>'
+        +'</div>'
+        +'<button class="wr-model-btn" id="wm-btn-'+i+'" onclick="genWritingModel('+i+')">📝 모범 작문 보기</button>'
+        +'<div class="wr-model-box" id="wm-box-'+i+'"></div>'
+        +'<div class="wr-news-list" id="wn'+i+'"><div style="color:var(--muted);font-size:.75rem;padding:.5rem 0">불러오는 중...</div></div>'
+        +'</div>';
+    }).join('');
+    result.classList.add('on');
+  }catch(e){
+    result.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p><strong>생성 실패</strong>'+e.message+'</p></div>';
+    result.classList.add('on');
+  }
+  loading.classList.remove('on');btn.disabled=false;
+}
+
+function exportWritingDocx(idx) {
+  const box = document.getElementById('wm-box-' + idx);
+  if (!box || !box.dataset.essay) return;
+  const { essay: e, question, keyword, title } = JSON.parse(box.dataset.essay);
+
+  // 순수 HTML → .doc 방식 (외부 라이브러리 불필요)
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  const today = new Date().toLocaleDateString('ko-KR');
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: '맑은 고딕', 'Malgun Gothic', Arial, sans-serif; font-size: 11pt; line-height: 1.8; margin: 40px; color: #222; }
+  h1 { font-size: 16pt; color: #FA7B2C; border-bottom: 2px solid #FA7B2C; padding-bottom: 8px; margin-bottom: 6px; }
+  .meta { font-size: 10pt; color: #666; margin-bottom: 20px; }
+  .question-box { background: #fff8f3; border-left: 4px solid #FA7B2C; padding: 12px 16px; margin-bottom: 24px; font-weight: bold; font-size: 12pt; }
+  .para-label { font-size: 10pt; font-weight: bold; color: #FA7B2C; margin: 18px 0 4px; }
+  .para-body { font-size: 11pt; line-height: 1.9; text-align: justify; margin-bottom: 8px; }
+  .tip-box { background: #fffde7; border: 1px solid #f9e07a; border-radius: 4px; padding: 10px 14px; margin-top: 20px; font-size: 10pt; color: #7a6000; }
+  hr { border: none; border-top: 1px solid #eee; margin: 20px 0; }
+</style>
+</head>
+<body>
+<h1>📝 모범 작문</h1>
+<div class="meta">키워드: ${esc(keyword)} &nbsp;|&nbsp; 유형: ${esc(title)} &nbsp;|&nbsp; ${today}</div>
+<div class="question-box">📋 문제<br><br>${esc(question)}</div>
+<hr>
+<div class="para-label">① 서론</div>
+<div class="para-body">${esc(e.p1||'')}</div>
+<div class="para-label">② 본론 1</div>
+<div class="para-body">${esc(e.p2||'')}</div>
+<div class="para-label">③ 본론 2</div>
+<div class="para-body">${esc(e.p3||'')}</div>
+<div class="para-label">④ 결론</div>
+<div class="para-body">${esc(e.p4||'')}</div>
+${e.tip ? `<hr><div class="tip-box">💡 핵심 전략: ${esc(e.tip)}</div>` : ''}
+</body>
+</html>`;
+
+  const blob = new Blob(['﻿' + html], { type: 'application/msword;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const dateStr = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  a.download = `모범작문_${keyword||'작문'}_${dateStr}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+// ══════════════ 뉴스 근거추출 모달 ══════════════
+let _nqCards = [];
+let _nqCurrent = {};
+
+function openNewsModal(idx) {
+  const a = _nqCards[idx];
+  if (!a) return;
+  const overlay = document.getElementById('nq-modal-overlay');
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.getElementById('nq-modal-kw').textContent = (a.relKws||[]).join(' · ');
+  document.getElementById('nq-modal-title').textContent = a.title;
+  document.getElementById('nq-modal-src').textContent = (a.source||'') + ' · ' + (a.date||'');
+  document.getElementById('nq-modal-answer').style.display = 'none';
+  document.getElementById('nq-feedback-wrap').style.display = 'none';
+  document.getElementById('nq-export-row').style.display = 'none';
+  document.getElementById('nq-answer-ta').value = '';
+  document.getElementById('nq-file-preview').style.display = 'none';
+  document.getElementById('nq-file-input').value = '';
+  _nqCurrent = { title: a.title, summary: a.aiSummary||'', kw: (a.relKws||[]).join(','), question:'', feedbackData: null };
+  const body = document.getElementById('nq-modal-body');
+  body.innerHTML = '<div class="nq-modal-loading">✍️ 근거 추출 중...</div>';
+  fetchNqArguments(a.title, a.aiSummary||'', (a.relKws||[]).join(','));
+}
+
+function closeNewsModal() {
+  document.getElementById('nq-modal-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+  _nqCurrent = {};
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeNewsModal(); closeStudyModal(); } });
+
+async function fetchNqArguments(title, summary, kw) {
+  const body = document.getElementById('nq-modal-body');
+  document.getElementById('nq-modal-answer').style.display = 'none';
+  try {
+    const res = await fetch('/api/summarize', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({mode:'newsArgument', title, summary, keyword:kw})
+    });
+    const d = await res.json();
+    if (!d.arguments?.length) throw new Error('논거 없음');
+    const sideColor = {'찬성에 유리':'#4ade80','반대에 유리':'#f87171','양쪽 모두':'#a78bfa'};
+    body.innerHTML = '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.8rem;">📋 작문 본론에 바로 쓸 수 있는 근거예요. 복사해서 활용하세요.</div>'
+      + '<div class="nq-list">' + d.arguments.map((arg) => `
+        <div class="nq-item" style="cursor:default">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem">
+            <span class="nq-type">${arg.point||''}</span>
+            <span style="font-size:.58rem;padding:.1rem .4rem;border-radius:3px;background:rgba(255,255,255,.06);color:${sideColor[arg.side]||'#aaa'}">${arg.side||''}</span>
+          </div>
+          <div class="nq-q" style="font-size:.78rem;line-height:1.65">${arg.sentence||''}</div>
+          <button onclick="copyArgument(this)" data-text="${(arg.sentence||'').replace(/"/g,'&quot;')}" style="margin-top:.4rem;font-size:.62rem;padding:.2rem .5rem;border-radius:4px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);color:#4ade80;cursor:pointer;">📋 복사</button>
+        </div>`).join('') + '</div>';
+  } catch(e) {
+    body.innerHTML = `<div class="nq-modal-loading">⚠️ 생성 실패: ${e.message}</div>`;
+  }
+}
+
+function copyArgument(btn) {
+  const text = btn.dataset.text;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✅ 복사됨';
+    setTimeout(() => { btn.textContent = '📋 복사'; }, 1500);
+  }).catch(() => { btn.textContent = '❌ 실패'; });
+}
+
+function switchAnswerTab(tab, btn) {
+  document.querySelectorAll('.nq-atab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('nq-atab-write').style.display = tab === 'write' ? 'block' : 'none';
+  document.getElementById('nq-atab-upload').style.display = tab === 'upload' ? 'block' : 'none';
+}
+
+async function handleNqFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('nq-file-preview');
+  preview.style.display = 'block';
+  preview.textContent = '📄 읽는 중...';
+  try {
+    let text = '';
+    if (file.name.endsWith('.txt')) {
+      text = await file.text();
+    } else if (file.name.endsWith('.docx')) {
+      const ab = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({arrayBuffer: ab});
+      text = result.value;
+    }
+    text = text.trim().slice(0, 3000);
+    _nqCurrent.uploadedText = text;
+    preview.textContent = `✅ ${file.name} (${text.length}자 추출됨)`;
+    document.getElementById('nq-answer-ta').value = text;
+  } catch(e) {
+    preview.textContent = '⚠️ 파일 읽기 실패: ' + e.message;
+  }
+}
+
+async function submitNqFeedback() {
+  const ta = document.getElementById('nq-answer-ta');
+  const answer = ta.value.trim();
+  if (!answer) { alert('답안을 작성하거나 파일을 업로드해주세요.'); return; }
+  if (!_nqCurrent.question) { alert('문제를 먼저 선택해주세요.'); return; }
+  const btn = document.querySelector('.nq-submit-btn');
+  btn.disabled = true; btn.textContent = '🤖 분석 중...';
+  const fbWrap = document.getElementById('nq-feedback-wrap');
+  fbWrap.style.display = 'block';
+  fbWrap.innerHTML = '<div class="nq-modal-loading">AI가 답안을 분석하고 있어요...</div>';
+  try {
+    const res = await fetch('/api/summarize', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mode: 'writingFeedback',
+        essay: answer,
+        context: `[문제] ${_nqCurrent.question}\n[기사 제목] ${_nqCurrent.title}\n[키워드] ${_nqCurrent.kw}`
+      })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    _nqCurrent.feedbackData = d;
+    _nqCurrent.answer = answer;
+    renderNqFeedback(d);
+    document.getElementById('nq-export-row').style.display = 'block';
+  } catch(e) {
+    fbWrap.innerHTML = `<div class="nq-modal-loading">⚠️ 피드백 실패: ${e.message}</div>`;
+  }
+  btn.disabled = false; btn.textContent = '🤖 AI 피드백 받기';
+}
+
+function renderNqFeedback(d) {
+  const wrap = document.getElementById('nq-feedback-wrap');
+  let html = '<div class="nq-fb-title">🤖 AI 피드백</div>';
+  if (d.score) html += `<div class="nq-fb-score">총점 ${d.score}점 · ${d.summary||''}</div>`;
+  if (d.strengths?.length) {
+    const items = d.strengths.map(x => '• ' + (typeof x === 'string' ? x : (x.comment||x.original||JSON.stringify(x))));
+    html += `<div class="nq-fb-section"><div class="nq-fb-label">✅ 잘된 점</div><div class="nq-fb-text">${items.join('<br>')}</div></div>`;
+  }
+  if (d.errors?.length) {
+    const items = d.errors.map(x => `• <span style="color:#f87171">${x.original||''}</span> → ${x.fix||x.issue||''}`);
+    html += `<div class="nq-fb-section"><div class="nq-fb-label">✏️ 표현 수정</div><div class="nq-fb-text">${items.join('<br>')}</div></div>`;
+  }
+  if (d.suggestions?.length) {
+    const items = d.suggestions.map(s => '• ' + (typeof s === 'string' ? s : JSON.stringify(s)));
+    html += `<div class="nq-fb-section"><div class="nq-fb-label">📌 개선 제안</div><div class="nq-fb-text">${items.join('<br>')}</div></div>`;
+  }
+  if (d.rewrite) {
+    html += `<div class="nq-fb-section"><div class="nq-fb-label">✍️ 개선 예시</div><div class="nq-fb-text" style="font-style:italic;color:#c4b5fd">${d.rewrite}</div></div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function addNqWrongNote() {
+  if (!_nqCurrent.question) { alert('문제를 먼저 선택해주세요.'); return; }
+  const answer = document.getElementById('nq-answer-ta').value.trim();
+  const notes = JSON.parse(localStorage.getItem('wrongNotes')||'[]');
+  notes.unshift({ id: Date.now(), date: new Date().toLocaleDateString('ko-KR'), kw: _nqCurrent.kw||'', title: _nqCurrent.title||'', question: _nqCurrent.question||'', type: _nqCurrent.questionType||'', answer });
+  localStorage.setItem('wrongNotes', JSON.stringify(notes.slice(0,200)));
+  renderWrongNotes(); updateWrongCount();
+  const btn = document.querySelector('.nq-wrong-btn');
+  btn.textContent = '✅ 추가됨';
+  setTimeout(()=>{ btn.textContent = '❌ 오답노트 추가'; }, 1500);
+}
+
+function exportNqFeedback() {
+  if (!_nqCurrent.feedbackData) return;
+  const d = _nqCurrent.feedbackData;
+  const lines = ['=== 근거추출 AI 피드백 ===','','[기사] '+(_nqCurrent.title||''),'[문제] '+(_nqCurrent.question||''),'','--- 내 답안 ---',_nqCurrent.answer||'','','--- AI 피드백 ---','총점: '+(d.score||'')+'점',d.summary||'','','잘된 점:',...(d.strengths||[]).map(x=>'• '+(typeof x==='string'?x:(x.comment||''))),'','개선 제안:',...(d.suggestions||[]).map(s=>'• '+(typeof s==='string'?s:JSON.stringify(s))),'','생성일: '+new Date().toLocaleDateString('ko-KR')].join('\n');
+  const blob = new Blob([lines], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '근거추출_피드백.txt'; a.click();
+}
+
+async function genWritingModel(idx) {
+  const t = wrTopics[idx];
+  if (!t) return;
+  const btn = document.getElementById('wm-btn-' + idx);
+  const box = document.getElementById('wm-box-' + idx);
+  if (!btn || !box) return;
+
+  // 토글 — 이미 생성된 경우 보기/숨기기
+  if (box.classList.contains('on')) {
+    box.classList.remove('on');
+    btn.textContent = '📝 모범 작문 보기';
+    return;
+  }
+
+  // 이미 내용 있으면 그냥 열기
+  if (box.innerHTML.trim()) {
+    box.classList.add('on');
+    btn.textContent = '📝 모범 작문 닫기';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '✦ 생성 중...';
+  box.classList.add('on');
+  box.innerHTML = '<div style="color:var(--muted);font-size:.75rem;padding:.5rem 0;">모범 작문을 생성 중이에요...</div>';
+
+  try {
+    const r = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'writingModel',
+        question: t.question,
+        keyword: t._kw || '',
+        title: t.title || ''
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || '생성 실패');
+    const e = data.essay || {};
+    const paras = [
+      { num: '① 서론', text: e.p1 },
+      { num: '② 본론 1', text: e.p2 },
+      { num: '③ 본론 2', text: e.p3 },
+      { num: '④ 결론',  text: e.p4 },
+    ].filter(p => p.text);
+    // essay 데이터를 박스에 저장 (내보내기용)
+    box.dataset.essay = JSON.stringify({ essay: e, question: t.question, keyword: t._kw || '', title: t.title || '' });
+    // 생성 즉시 워드 다운로드
+    exportWritingDocxData(e, t.question, t._kw||'', t.title||'');
+    box.innerHTML =
+      '<div class="wr-model-label">📋 모범 작문 생성 완료 — 워드 파일이 다운로드됩니다</div>' +
+      '<div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">파일이 다운로드되지 않으면 아래 버튼을 누르세요</div>' +
+      '<button class="wr-export-btn" style="margin-top:.5rem" onclick="exportWritingDocxData(JSON.parse(atob(\'' + btoa(encodeURIComponent(JSON.stringify(e))) + '\'.replace(/%([0-9A-F]{2})/gi,(_,h)=>String.fromCharCode(parseInt(h,16)))),\'' + encodeURIComponent(t.question||'') + '\',\'' + encodeURIComponent(t._kw||'') + '\',\'' + encodeURIComponent(t.title||'') + '\')">📄 다시 다운로드</button>';
+    btn.textContent = '📝 모범 작문 보기';
+  } catch(err) {
+    box.innerHTML = '<div style="color:var(--muted);font-size:.75rem;">생성 실패: ' + err.message + '</div>';
+    btn.textContent = '📝 모범 작문 보기';
+  }
+  btn.disabled = false;
+}
+
+async function loadWrNews(btn){
+  const idx=btn.dataset.idx; const sk=btn.dataset.sk;
+  const box=document.getElementById('wn'+idx);
+  if(!box) return;
+  if(box.classList.contains('on')){box.classList.remove('on');return;}
+  box.classList.add('on');
+  box.innerHTML='<div style="color:var(--muted);font-size:.75rem;padding:.5rem 0">불러오는 중...</div>';
+  try{
+    const items=await getRss('https://news.google.com/rss/search?q='+encodeURIComponent(sk+' 방송 미디어 when:30d')+'&hl=ko&gl=KR&ceid=KR:ko');
+    // 중복 제거 — 제목 앞 20자 기준
+    const seen=new Set();
+    const filtered=items.filter(a=>{
+      const ko=isKo(strip(a.title));
+      const key=strip(a.title).slice(0,20);
+      if(!ko||seen.has(key)) return false;
+      seen.add(key); return true;
+    }).slice(0,5);
+    if(!filtered.length){box.innerHTML='<div style="color:var(--muted);font-size:.75rem;padding:.5rem 0">관련 기사를 찾을 수 없어요</div>';return;}
+    box.innerHTML=filtered.map(a=>'<div class="wr-news-item"><a href="'+a.link+'" target="_blank" rel="noopener">'+strip(a.title)+'</a><span class="wr-news-src">'+fmtD(a.pubDate)+'</span></div>').join('');
+  }catch(e){box.innerHTML='<div style="color:var(--muted);font-size:.75rem;padding:.5rem 0">오류: '+e.message+'</div>';}
+}
+
+/* ── 대본분석 ── */
+const SC_KEY = 'sc_v4';
+const tdStr = () => new Date().toISOString().slice(0, 10);
+
+/* ── 저장소 헬퍼 ── */
+function scLoad() {
+  try { const s = localStorage.getItem(SC_KEY); return s ? JSON.parse(s) : { date: '', gen: 0, fb: 0, scripts: [], analyzed: {}, history: [] }; }
+  catch (e) { return { date: '', gen: 0, fb: 0, scripts: [], analyzed: {}, history: [] }; }
+}
+function scSave(d) { localStorage.setItem(SC_KEY, JSON.stringify(d)); }
+function scData() {
+  const d = scLoad();
+  if (d.date !== tdStr()) { d.date = tdStr(); d.gen = 0; d.fb = 0; }
+  if (!d.analyzed) d.analyzed = {};
+  if (!d.history) d.history = [];
+  if (!d.scripts) d.scripts = [];
+  return d;
+}
+function updateScCount() {
+  const d = scData();
+  const genEl = document.getElementById('sc-used');
+  const fbEl = document.getElementById('sc-fb-used');
+  if (genEl) genEl.textContent = d.gen;
+  if (fbEl) fbEl.textContent = d.fb;
+  const btn = document.getElementById('sc-btn');
+  if (!btn) return;
+  if (d.gen >= 5) { btn.disabled = true; btn.textContent = '오늘 생성 완료'; }
+  else { btn.disabled = false; btn.textContent = '🎬 대본 생성'; }
+}
+
+/* ── 상수 ── */
+const GENRES = ['로맨스','스릴러','가족드라마','직장물','청춘드라마','의학드라마','법정드라마','사극','범죄수사','멜로'];
+const SITUATIONS = [
+  '오랫동안 숨겨온 비밀이 드러나는 장면', '부자(父子) 간 갈등이 폭발하는 장면',
+  '거짓말이 들통나는 순간', '위기 상황에서 진심이 드러나는 장면',
+  '이별 직전 마지막 대화 장면', '팀 내 권력 갈등이 드러나는 장면',
+  '주인공이 중요한 결심을 하는 장면', '연인 사이의 오해가 쌓이는 장면',
+  '오래된 친구 사이의 재회 장면', '가족 간 오해가 쌓이는 장면'
+];
+const RAND_QS = [
+  '이 씬에서 카메라는 어디에 위치해야 할까요? 이유와 함께 말해보세요.',
+  '두 인물 중 누구의 시점으로 연출하겠습니까? 그 이유는?',
+  '이 씬의 BGM을 고른다면 어떤 분위기의 음악을 선택하겠습니까?',
+  '이 씬에서 가장 중요한 대사 한 줄을 고르고 이유를 설명하세요.',
+  '편집 속도(컷 간격)는 어떻게 설정하겠습니까? 느리게 vs 빠르게',
+  '이 씬 직전에 어떤 장면이 있었을 것 같습니까?',
+  '이 씬 이후 인물의 행동을 예측해보세요.',
+  '갈등의 원인은 무엇이고 해결 방향은 어떻게 될 것 같습니까?',
+  '조명은 어떤 분위기로 설정하겠습니까? 밝게 vs 어둡게, 이유는?',
+  '이 씬을 한 문장으로 요약한다면?'
+];
+const SPEAK_GUIDE = `교수님 앞에서 이렇게 말해보세요
+
+① 씬 번호와 상황을 먼저 말하기
+   "이 씬은 [씬번호]로, [장소]에서 [인물A]와 [인물B]가 [상황]하는 장면입니다."
+
+② 갈등 구조 설명
+   "[인물A]는 ~을 원하고, [인물B]는 ~을 원하기 때문에 갈등이 발생합니다."
+
+③ 핵심 대사 짚기
+   "특히 [대사]라는 대사에서 인물의 [감정/의도]가 잘 드러납니다."
+
+④ 연출 제안으로 마무리
+   "저라면 이 씬을 [클로즈업/롱샷] 위주로 연출해 [감정]을 강조하겠습니다."
+
+⚠️ 10분 안에 이 흐름대로 말하는 연습을 하세요.`;
+
+let scList = [];
+
+/* ── 대본 목록 불러오기 (7일치) ── */
+function scLoadList() {
+  const d = scData();
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
+  // 7일 이내 것만
+  const valid = (d.scripts || []).filter(sc => {
+    if (!sc.savedDate) return true;
+    return new Date(sc.savedDate) >= cutoff;
+  });
+  if (valid.length !== (d.scripts || []).length) { d.scripts = valid; scSave(d); }
+  scList = valid;
+  if (scList.length) {
+    renderScripts();
+    const empty = document.getElementById('sc-empty');
+    if (empty) empty.style.display = 'none';
+  }
+  // 저장된 점수 있으면 차트 즉시 표시
+  renderWeaknessChart();
+}
+
+/* ── 대본 생성 ── */
+
+function toggleScCard(id) {
+  const card = document.getElementById('scc' + id);
+  const body = document.getElementById('scbody' + id);
+  const btn  = document.getElementById('sctoggle' + id);
+  if (!card || !body) return;
+  const collapsed = card.classList.toggle('collapsed');
+  if (btn) btn.textContent = collapsed ? '▼ 펼치기' : '▲ 접기';
+}
+function collapseAllCards(collapse) {
+  document.querySelectorAll('.sc-card').forEach(card => {
+    const id = card.id.replace('scc','');
+    card.classList.toggle('collapsed', collapse);
+    const btn = document.getElementById('sctoggle'+id);
+    if (btn) btn.textContent = collapse ? '▼ 펼치기' : '▲ 접기';
+  });
+}
+
+async function genScript() {
+  const d = scData();
+  if (d.gen >= 5) { alert('오늘 생성 횟수(5회)를 모두 사용했어요. 내일 다시 시도해보세요!'); return; }
+  const btn = document.getElementById('sc-btn');
+  const loading = document.getElementById('sc-loading');
+  const empty = document.getElementById('sc-empty');
+  btn.disabled = true;
+  loading.classList.add('on');
+  if (empty) empty.style.display = 'none';
+
+  // 이미 쓴 장르+상황 조합 수집
+  const usedCombos = (d.scripts || []).map(s => (s.genre||'') + '|' + (s.situation||''));
+  const usedGenres = (d.scripts || []).map(s => s.genre || '');
+  const usedSituations = (d.scripts || []).map(s => s.situation || '');
+
+  // 안 쓴 장르 우선, 없으면 전체
+  const unusedGenres = GENRES.filter(g => !usedGenres.includes(g));
+  const genrePool = unusedGenres.length ? unusedGenres : GENRES;
+  const genre = genrePool[Math.floor(Math.random() * genrePool.length)];
+
+  // 안 쓴 상황 우선, 없으면 전체
+  const unusedSituations = SITUATIONS.filter(s => !usedSituations.includes(s));
+  const sitPool = unusedSituations.length ? unusedSituations : SITUATIONS;
+  const situation = sitPool[Math.floor(Math.random() * sitPool.length)];
+
+  const randQ = RAND_QS[Math.floor(Math.random() * RAND_QS.length)];
+
+  // AI에게 이전 생성 목록 전달
+  const usedScripts = (d.scripts || []).map(s => `장르:${s.genre} / 상황:${s.situation}`);
+
+  // 약점 요약 추출 — 평균 가장 낮은 항목 (토큰 30개 이내)
+  const weaknessTip = (() => {
+    const hist = (d.scoreHistory || []).slice(-10);
+    if (!hist.length) return '';
+    const keys = ['intro','conflict','dialogue','direction'];
+    const labels = {intro:'씬소개',conflict:'갈등구조',dialogue:'핵심대사',direction:'연출제안'};
+    const avgs = keys.map(k => ({
+      k, avg: hist.reduce((s,h) => s + (h.scores?.[k] || 3), 0) / hist.length
+    })).sort((a,b) => a.avg - b.avg);
+    const weak = avgs[0];
+    if (weak.avg >= 4) return ''; // 전반적으로 잘하면 전달 안 함
+    return `학생 약점: ${labels[weak.k]}(평균${weak.avg.toFixed(1)}점) — 이 부분이 드러나는 씬으로 출제하세요.`;
+  })();
+
+  try {
+    const r = await fetch('/api/summarize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'script', genre, situation, usedScripts, weaknessTip })
+    });
+    const res = await r.json();
+    if (!r.ok) throw new Error(res.error || '생성 실패');
+    const sc = { ...res.script, genre, situation, randQ, id: Date.now(), savedDate: tdStr() };
+    d.gen++; d.date = tdStr();
+    d.scripts = d.scripts || [];
+    d.scripts.unshift(sc);
+    // 7일치 유지
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
+    d.scripts = d.scripts.filter(s => !s.savedDate || new Date(s.savedDate) >= cutoff);
+    // 히스토리 기록
+    d.history = d.history || [];
+    d.history.unshift({ date: tdStr(), genre, situation, id: sc.id });
+    if (d.history.length > 50) d.history = d.history.slice(0, 50);
+    scSave(d);
+    scList = d.scripts;
+    updateScCount();
+    renderScripts();
+  } catch (e) {
+    alert('생성 실패: ' + e.message);
+  } finally {
+    loading.classList.remove('on');
+  }
+}
+
+/* ── 대본 렌더링 ── */
+function renderScripts() {
+  const result = document.getElementById('sc-result');
+  if (!result || !scList.length) return;
+  const d = scData();
+  result.innerHTML = scList.map((sc, i) => {
+    const id = sc.id || i;
+    const analyzed = !!(d.analyzed && d.analyzed[id]);
+    const dateLabel = sc.savedDate && sc.savedDate !== tdStr() ? `<span style="font-size:.62rem;color:var(--muted);margin-left:.4rem;">${sc.savedDate}</span>` : '';
+    return `<div class="sc-card" id="scc${id}">
+      <div class="sc-card-header" onclick="toggleScCard(${id})">
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;">
+          <span class="sc-tag genre">${sc.genre}</span>
+          <span class="sc-tag">${sc.situation}</span>
+          ${dateLabel}
+          <span style="font-size:.65rem;color:var(--muted);">SCENE ${sc.sceneNum || ('#' + String(i + 1).padStart(2, '0'))} · ${sc.setting || ''}</span>
+        </div>
+        <button class="sc-toggle-btn" id="sctoggle${id}">▲ 접기</button>
+      </div>
+      <div class="sc-card-body" id="scbody${id}">
+      <div class="sc-scene-num" style="display:none"></div>
+      <div class="sc-body">${formatScript(sc.script || '')}</div>
+      <div class="sc-q-box">
+        <div class="sc-q-label">🎯 랜덤 분석 질문</div>
+        <div class="sc-q-text" id="scq${id}">${sc.randQ || ''}</div>
+        <button class="sc-foot-btn" onclick="rerollQ(${id})">🔀 질문 다시 뽑기</button>
+      </div>
+      <div class="sc-action-row">
+        <button class="sc-action-btn sc-model-btn" id="scmbtn${id}" onclick="toggleModel(${id})" ${analyzed ? 'disabled style="opacity:.5;"' : ''}>${analyzed ? '📋 분석 완료' : '📋 모범 분석 보기'}</button>
+        <button class="sc-action-btn sc-guide-btn" onclick="toggleGuide(${id})">🗣️ 가이드</button>
+        <button class="sc-action-btn sc-export-btn" onclick="exportDocx(${id})">📄 워드 내보내기</button>
+      </div>
+      <div class="sc-guide-box" id="scg${id}" style="display:none;">
+        <div class="sc-guide-label">🗣️ 면접 말하기 가이드</div>
+        <div class="sc-guide-text">${SPEAK_GUIDE}</div>
+      </div>
+      <div class="sc-model-box" id="scm${id}">
+        <div class="sc-loading" id="scml${id}" style="display:none;font-size:.75rem;color:var(--green);padding:.4rem 0;">✦ 분석 생성 중...</div>
+        <div id="scmc${id}">${analyzed && sc._analysis ? renderAnalysis(sc._analysis) : ''}</div>
+      </div>
+      </div>
+    </div>`;
+  }).join('');
+  // 첨삭 카운터 동기화
+  const fbEl2 = document.getElementById('sc-fb-used2');
+  if (fbEl2) fbEl2.textContent = d.fb;
+}
+
+function renderAnalysis(a) {
+  if (!a) return '';
+  const ref = a.reference || {};
+  const refItems = [
+    ['🎞️ 샷사이즈', ref.shotSize], ['📐 앵글', ref.angle],
+    ['🎬 무브먼트', ref.movement], ['🔭 렌즈', ref.lens],
+    ['🖼️ 구도', ref.composition], ['🌡️ 색온도·조명', ref.colorTemp],
+    ['🌀 피사계심도', ref.dof], ['✂️ 편집 리듬', ref.editing],
+    ['🔊 사운드', ref.sound]
+  ].filter(([,v]) => v);
+  const refHtml = ref.title ? `
+    <div class="sc-ref-box">
+      <div class="sc-ref-label">📺 레퍼런스 씬</div>
+      <div class="sc-ref-title">${ref.title}${ref.ep ? ' · ' + ref.ep : ''}</div>
+      <div class="sc-ref-grid">${refItems.map(([k,v]) =>
+        `<div class="sc-ref-item"><div class="sc-ref-item-key">${k}</div><div class="sc-ref-item-val">${v}</div></div>`
+      ).join('')}</div>
+    </div>` : '';
+  return `<div class="sc-model-section"><div class="sc-model-label">👥 인물 관계 & 갈등 구조</div><div class="sc-model-text">${a.characters || ''}</div></div>
+    <div class="sc-model-section"><div class="sc-model-label">🎯 씬의 주제 & 감정선</div><div class="sc-model-text">${a.theme || ''}</div></div>
+    <div class="sc-model-section"><div class="sc-model-label">🎥 연출 포인트 예시</div><div class="sc-model-text">${a.direction || ''}</div></div>
+    <div class="sc-interview"><div class="sc-interview-label">💬 면접 답변 예시</div><div class="sc-model-text">${a.interview || ''}</div></div>
+    ${refHtml}
+    <div class="sc-ai-disclaimer">※ 이 모범 분석은 AI가 생성한 참고 예시입니다. 정답이 아니며, 같은 씬도 관점에 따라 다양한 해석이 가능합니다. 실제 면접에서는 자신만의 시각과 언어로 표현하는 것이 중요합니다.</div>`;
+}
+
+/* ── 대본 형식 파싱 ── */
+function formatScript(raw) {
+  if (!raw) return '';
+  return raw.split('\n').map(line => {
+    const t = line.trim();
+    if (!t) return '<br>';
+    if (/^S#\d+|^씬\s*\d+/i.test(t))
+      return '<span class="sc-dir" style="color:#888;font-weight:700;">' + t + '</span>';
+    if ((t.startsWith('(') && t.includes(')')) || t.startsWith('['))
+      return '<span class="sc-dir">' + t + '</span>';
+    const m = t.match(/^([가-힣A-Za-z\s]{1,8})(\s*\([^)]*\))?\s*:\s*(.*)/);
+    if (m) return '<span class="sc-char">' + m[1].trim() + (m[2] ? '<span class="sc-dir">' + m[2] + '</span>' : '') + '</span><span class="sc-line">: ' + m[3] + '</span>';
+    return '<span class="sc-dir">' + t + '</span>';
+  }).join('\n');
+}
+
+/* ── 질문 다시 뽑기 ── */
+function rerollQ(id) {
+  const el = document.getElementById('scq' + id);
+  if (!el) return;
+  const newQ = RAND_QS[Math.floor(Math.random() * RAND_QS.length)];
+  el.textContent = newQ;
+  // 저장도 업데이트
+  const d = scData();
+  const sc = (d.scripts || []).find(s => s.id === id);
+  if (sc) { sc.randQ = newQ; scSave(d); }
+  const sc2 = scList.find(s => s.id === id);
+  if (sc2) sc2.randQ = newQ;
+}
+
+/* ── 말하기 가이드 토글 ── */
+function toggleGuide(id) {
+  const box = document.getElementById('scg' + id);
+  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+/* ── 모범 분석 (대본 당 1회, 잠금 저장) ── */
+async function toggleModel(id) {
+  const box = document.getElementById('scm' + id);
+  if (!box) return;
+  if (box.classList.contains('on')) { box.classList.remove('on'); return; }
+  const d = scData();
+  // 이미 분석 완료된 경우 저장된 것 표시
+  if (d.analyzed && d.analyzed[id]) {
+    const sc = scList.find(s => s.id === id);
+    const content = document.getElementById('scmc' + id);
+    if (content && sc && sc._analysis) content.innerHTML = renderAnalysis(sc._analysis);
+    box.classList.add('on');
+    return;
+  }
+  box.classList.add('on');
+  const loadingEl = document.getElementById('scml' + id);
+  loadingEl.style.display = 'block';
+  const sc = scList.find(s => s.id === id);
+  if (!sc) { loadingEl.style.display = 'none'; return; }
+  try {
+    const r = await fetch('/api/summarize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'scriptAnalysis', script: sc.script, genre: sc.genre, situation: sc.situation })
+    });
+    const res = await r.json();
+    if (!r.ok) throw new Error(res.error || '분석 실패');
+    const a = res.analysis;
+    const contentEl = document.getElementById('scmc' + id);
+    // 저장
+    d.analyzed[id] = true;
+    const scIdx = d.scripts.findIndex(s => s.id === id);
+    if (scIdx >= 0) d.scripts[scIdx]._analysis = a;
+    scSave(d);
+    // 워드 바로 다운로드
+    exportAnalysisDocx(sc, a);
+    contentEl.innerHTML = '<div style="font-size:.72rem;color:var(--muted);padding:.5rem 0">📄 모범 분석이 워드 파일로 다운로드됩니다<br><button class="sc-foot-btn" style="margin-top:.4rem" onclick="exportAnalysisDocx(scList.find(s=>s.id===\''+id+'\'),scData().scripts.find(s=>s.id===\''+id+'\')?._analysis)">↺ 다시 다운로드</button></div>';
+    // 버튼 비활성
+    const mbtn = document.getElementById('scmbtn' + id);
+    if (mbtn) { mbtn.textContent = '📋 분석 완료'; mbtn.disabled = true; mbtn.style.opacity = '.5'; }
+  } catch (e) {
+    const contentEl = document.getElementById('scmc' + id);
+    contentEl.innerHTML = '<div style="color:var(--muted);font-size:.75rem;">분석 실패: ' + e.message + '</div>';
+  } finally { loadingEl.style.display = 'none'; }
+}
+
+/* ── 직접 쓰기 토글 ── */
+function toggleWrite(id) {
+  const box = document.getElementById('scw' + id);
+  if (box) box.classList.toggle('on');
+}
+
+/* ── AI 첨삭 (항목별 점수형, 하루 10회 제한) ── */
+async function submitAnalysis(id) {
+  const d = scData();
+  if (d.fb >= 10) { alert('오늘 첨삭 횟수(10회)를 모두 사용했어요!'); return; }
+  const a = (document.getElementById('sct_a' + id) || {}).value || '';
+  const b = (document.getElementById('sct_b' + id) || {}).value || '';
+  const c = (document.getElementById('sct_c' + id) || {}).value || '';
+  const dv = (document.getElementById('sct_d' + id) || {}).value || '';
+  if (!a && !b && !c && !dv) { alert('분석 내용을 먼저 작성해주세요!'); return; }
+  const userText = `① 씬 소개: ${a}\n② 갈등 구조: ${b}\n③ 핵심 대사: ${c}\n④ 연출 제안: ${dv}`;
+  const sc = scList.find(s => s.id === id);
+  if (!sc) return;
+  const feedback = document.getElementById('scf' + id);
+  const fbContent = document.getElementById('scfc' + id);
+  feedback.classList.add('on');
+  fbContent.innerHTML = '<span style="color:var(--muted);font-size:.75rem;">✦ 첨삭 중...</span>';
+  try {
+    const r = await fetch('/api/summarize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'scriptFeedback', script: sc.script, genre: sc.genre, userAnalysis: userText })
+    });
+    const res = await r.json();
+    if (!r.ok) throw new Error(res.error || '첨삭 실패');
+    d.fb++; d.date = tdStr();
+
+    // ── 약점 학습: 점수 누적 저장 ──
+    if (res.scores) {
+      if (!d.scoreHistory) d.scoreHistory = [];
+      d.scoreHistory.push({
+        date: tdStr(),
+        genre: sc.genre || '',
+        scores: res.scores
+      });
+      if (d.scoreHistory.length > 30) d.scoreHistory = d.scoreHistory.slice(-30);
+      // 대본에도 피드백 저장 (약점 요약용)
+      const scIdx = d.scripts.findIndex(s => s.id === id);
+      if (scIdx >= 0) d.scripts[scIdx]._feedbackScores = res.scores;
+    }
+    scSave(d);
+    updateScCount();
+    const fbEl2 = document.getElementById('sc-fb-used2');
+    if (fbEl2) fbEl2.textContent = d.fb;
+    // 점수형 렌더링
+    if (res.scores) {
+      fbContent.innerHTML = renderFeedback(res.scores, res.feedback);
+      // 약점 차트 업데이트
+      renderWeaknessChart();
+    } else {
+      fbContent.innerHTML = res.feedback.replace(/\n/g, '<br>');
+    }
+  } catch (e) {
+    fbContent.innerHTML = '<span style="color:var(--muted);">첨삭 실패: ' + e.message + '</span>';
+  }
+}
+
+function renderFeedback(scores, comment) {
+  const items = [
+    { key: 'intro', label: '씬 소개', color: '#c084fc' },
+    { key: 'conflict', label: '갈등 구조', color: var_blue },
+    { key: 'dialogue', label: '핵심 대사', color: '#fbbf24' },
+    { key: 'direction', label: '연출 제안', color: var_green }
+  ];
+  const bars = items.map(it => {
+    const score = scores[it.key] || 0;
+    const pct = (score / 5) * 100;
+    return `<div style="margin-bottom:.5rem;">
+      <div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:.2rem;">
+        <span style="color:${it.color};">${it.label}</span>
+        <span style="color:#fff;font-weight:700;">${score}<span style="color:var(--muted);font-weight:400;">/5</span></span>
+      </div>
+      <div style="background:#1a1a1a;border-radius:4px;height:5px;">
+        <div style="background:${it.color};width:${pct}%;height:5px;border-radius:4px;transition:width .5s;"></div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div style="margin-bottom:.8rem;">${bars}</div>
+    <div style="font-size:.78rem;line-height:1.8;color:#ccc;">${(comment || '').replace(/\n/g, '<br>')}</div>`;
+}
+const var_blue = 'var(--blue)';
+const var_green = 'var(--green)';
+
+/* ── 연습 기록 탭 ── */
+function renderHistory() {
+  const d = scData();
+  const hist = (d.history || []).slice(0, 20);
+  const el = document.getElementById('sc-history');
+  if (!el) return;
+  if (!hist.length) { el.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:1rem 0;">연습 기록이 없어요</div>'; return; }
+  // 장르 통계
+  const genreCount = {};
+  hist.forEach(h => { genreCount[h.genre] = (genreCount[h.genre] || 0) + 1; });
+  const statHtml = Object.entries(genreCount)
+    .sort((a, b) => b[1] - a[1])
+    .map(([g, c]) => `<span class="sc-tag genre" style="margin:.2rem;">${g} ×${c}</span>`).join('');
+  const listHtml = hist.map(h =>
+    `<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #1a1a1a;font-size:.76rem;">
+      <span><span class="sc-tag genre" style="margin-right:.4rem;">${h.genre}</span>${h.situation}</span>
+      <span style="color:var(--muted);white-space:nowrap;margin-left:.5rem;">${h.date}</span>
+    </div>`).join('');
+  el.innerHTML = `<div style="margin-bottom:.8rem;"><div style="font-size:.68rem;color:var(--muted);margin-bottom:.4rem;">장르별 연습 횟수</div>${statHtml}</div>
+    <div>${listHtml}</div>`;
+}
+
+/* ── 워드 내보내기 ── */
+function exportDocx(id) {
+  const d = scData();
+  const sc = scList.find(s => s.id === id);
+  if (!sc) return;
+
+  // 데이터 수집
+  const genre = sc.genre || '';
+  const situation = sc.situation || '';
+  const savedDate = sc.savedDate || tdStr();
+  const sceneNum = sc.sceneNum || '';
+  const setting = sc.setting || '';
+  const scriptRaw = sc.script || '';
+  const randQ = sc.randQ || '';
+
+  // 직접 쓴 분석
+  const getVal = (elId) => { const el = document.getElementById(elId); return el ? el.value.trim() : ''; };
+  const userA = getVal('sct_a' + id);
+  const userB = getVal('sct_b' + id);
+  const userC = getVal('sct_c' + id);
+  const userD = getVal('sct_d' + id);
+  const hasUserAnalysis = userA || userB || userC || userD;
+
+  // 모범 분석 (저장된 것)
+  const analysis = sc._analysis || null;
+
+  // AI 첨삭 (화면에서 가져오기)
+  const fbEl = document.getElementById('scfc' + id);
+  const feedbackText = fbEl ? fbEl.innerText.trim() : '';
+
+  // 점수 (화면 바 차트에서 파싱 — 텍스트로 재구성)
+  const scoresEl = document.getElementById('scf' + id);
+  const scoresText = scoresEl ? scoresEl.innerText.trim() : '';
+
+  // RTF 기반 워드 호환 문서 생성 (docx 라이브러리 없이 RTF로)
+  // → 실제로는 HTML→Blob→.doc 방식 사용 (MS Word가 HTML .doc 읽음)
+  const lines = scriptRaw.split('\n');
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  const scriptHtml = lines.map(line => {
+    const t = line.trim();
+    if (!t) return '<p style="margin:2px 0;">&nbsp;</p>';
+    if (/^S#\d+|^씬\s*\d+/i.test(t))
+      return `<p style="margin:4px 0;color:#555;font-weight:bold;">${esc(t)}</p>`;
+    if (t.startsWith('(') && t.includes(')'))
+      return `<p style="margin:4px 0;color:#888;font-style:italic;">${esc(t)}</p>`;
+    const m = t.match(/^([가-힣A-Za-z\s]{1,8})(\s*\([^)]*\))?\s*:\s*(.*)/);
+    if (m) return `<p style="margin:4px 0;"><b style="color:#7a5c00;">${esc(m[1].trim())}${m[2]?'<span style="color:#888;font-style:italic;">'+esc(m[2])+'</span>':''}</b>: ${esc(m[3])}</p>`;
+    return `<p style="margin:4px 0;color:#888;font-style:italic;">${esc(t)}</p>`;
+  }).join('');
+
+  const analysisSection = analysis ? `
+    <h2 style="color:#2e7d32;font-size:13pt;margin:16px 0 6px;">📋 모범 분석 (비교용)</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+      <tr><td style="padding:6px 10px;background:#f1f8e9;border:1px solid #c8e6c9;font-weight:bold;color:#2e7d32;width:130px;">👥 인물 관계 & 갈등</td><td style="padding:6px 10px;border:1px solid #c8e6c9;">${esc(analysis.characters||'')}</td></tr>
+      <tr><td style="padding:6px 10px;background:#f1f8e9;border:1px solid #c8e6c9;font-weight:bold;color:#2e7d32;">🎯 주제 & 감정선</td><td style="padding:6px 10px;border:1px solid #c8e6c9;">${esc(analysis.theme||'')}</td></tr>
+      <tr><td style="padding:6px 10px;background:#f1f8e9;border:1px solid #c8e6c9;font-weight:bold;color:#2e7d32;">🎥 연출 포인트 예시</td><td style="padding:6px 10px;border:1px solid #c8e6c9;">${esc(analysis.direction||'')}</td></tr>
+      <tr><td style="padding:6px 10px;background:#f1f8e9;border:1px solid #c8e6c9;font-weight:bold;color:#2e7d32;">💬 면접 답변 예시</td><td style="padding:6px 10px;border:1px solid #c8e6c9;">${esc(analysis.interview||'')}</td></tr>
+    </table>` : '';
+
+  const userSection = `
+    <h2 style="color:#1565c0;font-size:13pt;margin:16px 0 6px;">✍️ 내 분석 작성란</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+      <tr>
+        <td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;width:130px;vertical-align:top;">① 씬 소개<br><span style="font-size:9pt;color:#888;">(한 문장)</span></td>
+        <td style="padding:8px 10px;border:1px solid #bbdefb;height:40px;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">② 갈등 구조</td>
+        <td style="padding:8px 10px;border:1px solid #bbdefb;height:50px;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">③ 핵심 대사 + 이유</td>
+        <td style="padding:8px 10px;border:1px solid #bbdefb;height:50px;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">④ 연출 제안</td>
+        <td style="padding:8px 10px;border:1px solid #bbdefb;height:50px;">&nbsp;</td>
+      </tr>
+    </table>`;
+
+  const feedbackSection = feedbackText ? `
+    <h2 style="color:#0277bd;font-size:13pt;margin:16px 0 6px;">🤖 AI 첨삭 결과</h2>
+    <div style="background:#f0f7ff;border:1px solid #b3d4f5;border-radius:4px;padding:10px 14px;font-size:10.5pt;line-height:1.8;">
+      ${esc(feedbackText).replace(/\n/g,'<br>')}
+    </div>` : '';
+
+  const guideSection = `
+    <h2 style="color:#6a1b9a;font-size:13pt;margin:16px 0 6px;">🗣️ 면접 말하기 가이드</h2>
+    <div style="background:#f3e5f5;border:1px solid #ce93d8;border-radius:4px;padding:10px 14px;font-size:10pt;line-height:1.9;">
+      <p><b>① 씬 번호와 상황을 먼저 말하기</b><br>"이 씬은 [씬번호]로, [장소]에서 [인물A]와 [인물B]가 [상황]하는 장면입니다."</p>
+      <p><b>② 갈등 구조 설명</b><br>"[인물A]는 ~을 원하고, [인물B]는 ~을 원하기 때문에 갈등이 발생합니다."</p>
+      <p><b>③ 핵심 대사 짚기</b><br>"특히 [대사]라는 대사에서 인물의 [감정/의도]가 잘 드러납니다."</p>
+      <p><b>④ 연출 제안으로 마무리</b><br>"저라면 이 씬을 [클로즈업/롱샷] 위주로 연출해 [감정]을 강조하겠습니다."</p>
+    </div>`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: '맑은 고딕', 'Malgun Gothic', Arial, sans-serif; font-size: 11pt; line-height: 1.6; margin: 40px; color: #222; }
+  h1 { font-size: 16pt; color: #1a1a1a; border-bottom: 2px solid #333; padding-bottom: 8px; }
+  h2 { font-size: 13pt; margin: 16px 0 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  .meta { background: #f8f8f8; border: 1px solid #ddd; border-radius: 4px; padding: 8px 14px; margin: 10px 0 16px; font-size: 10pt; color: #555; }
+  .script-box { background: #fafafa; border: 1px solid #ddd; border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; font-family: '맑은 고딕', monospace; }
+  .q-box { background: #fffde7; border: 1px solid #f9e07a; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<h1>🎬 대본분석 리포트</h1>
+<div class="meta">
+  <b>장르</b>: ${esc(genre)} &nbsp;|&nbsp; <b>상황</b>: ${esc(situation)} &nbsp;|&nbsp; <b>날짜</b>: ${savedDate}<br>
+  <b>씬</b>: ${esc(sceneNum)} &nbsp;|&nbsp; <b>배경</b>: ${esc(setting)}
+</div>
+
+<h2 style="color:#333;font-size:13pt;margin:0 0 6px;">📝 대본 원문</h2>
+<div class="script-box">${scriptHtml}</div>
+
+<div class="q-box">
+  <b style="color:#7a6000;">🎯 랜덤 분석 질문</b><br>
+  <span style="font-size:11pt;">${esc(randQ)}</span>
+</div>
+
+${userSection}
+${feedbackSection}
+${analysisSection}
+${guideSection}
+</body>
+</html>`;
+
+  // HTML → .doc Blob 다운로드 (MS Word가 HTML .doc 파일 읽음)
+  const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `대본분석_${genre}_${savedDate}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ── 약점 리포트 ── */
+/* ── 작문 피드백 ── */
+let wfEssayText = '';
+
+async function wfHandleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const _wff=document.getElementById('wf-file-info');if(_wff)_wff.textContent='📄 '+file.name;
+  const _wfb=document.getElementById('wf-gen-btn');if(_wfb)_wfb.disabled=true;
+  wfEssayText = '';
+
+  try {
+    if (file.name.endsWith('.txt')) {
+      wfEssayText = await file.text();
+    } else {
+      // docx → mammoth
+      const buf = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer: buf });
+      wfEssayText = result.value.trim();
+    }
+    if (wfEssayText.length < 30) {
+      alert('파일 내용이 너무 짧아요. 작문 내용을 확인해주세요.');
+      return;
+    }
+    if(_wfb)_wfb.disabled=false;
+  } catch(e) {
+    alert('파일 읽기 실패: ' + e.message);
+  }
+}
+
+async function wfLoadFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const fi = document.getElementById('wf-file-info');
+  if (fi) fi.textContent = '📄 ' + file.name;
+  const btn = document.getElementById('wf-gen-btn');
+  if (btn) btn.disabled = true;
+  try {
+    if (file.name.endsWith('.docx')) {
+      const reader = new FileReader();
+      reader.onload = async e => {
+        try {
+          const result = await mammoth.extractRawText({arrayBuffer: e.target.result});
+          wfEssayText = result.value;
+          if (btn) btn.disabled = false;
+        } catch(err) { alert('DOCX 읽기 실패: ' + err.message); }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = e => { wfEssayText = e.target.result; if (btn) btn.disabled = false; };
+      reader.onerror = () => alert('파일 읽기 실패');
+      reader.readAsText(file, 'utf-8');
+    }
+  } catch(e) { alert('파일 읽기 실패: ' + e.message); }
+}
+
+async function wfGenFeedback() {
+  if (!wfEssayText) return;
+  const btn = document.getElementById('wf-gen-btn');
+  const loading = document.getElementById('wf-loading');
+  const resultEl = document.getElementById('wf-result');
+
+  btn.disabled = true;
+  if(loading)loading.style.display = 'block';
+  resultEl.innerHTML = '';
+
+  try {
+    const r = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'writingFeedback', essay: wfEssayText })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || '실패');
+
+    resultEl.innerHTML = wfRender(data, wfEssayText);
+  } catch(e) {
+    resultEl.innerHTML = '<div style="color:#ef4444;font-size:.78rem;padding:.5rem">피드백 생성 실패: ' + e.message + '</div>';
+  } finally {
+    if(loading)loading.style.display = 'none';
+    btn.disabled = false;
+  }
+}
+
+function wfRender(d, originalText) {
+  const score = d.score || 0;
+  const scoreColor = score >= 80 ? '#22c55e' : score >= 60 ? '#f97316' : '#ef4444';
+
+  const errHtml = (d.errors||[]).map(e =>
+    `<div class="wf-item wf-error">
+      <div class="wf-item-orig">"${e.original||''}"</div>
+      <div class="wf-item-detail">🔴 ${e.issue||''}<br><span style="color:#86efac">→ ${e.fix||''}</span></div>
+    </div>`).join('');
+
+  const factHtml = (d.facts||[]).map(f =>
+    `<div class="wf-item wf-fact">
+      <div class="wf-item-orig">"${f.original||''}"</div>
+      <div class="wf-item-detail">🟡 ${f.issue||''}</div>
+    </div>`).join('');
+
+  const strHtml = (d.strengths||[]).map(s =>
+    `<div class="wf-item wf-strength">
+      <div class="wf-item-orig">"${s.original||''}"</div>
+      <div class="wf-item-detail">🟢 ${s.comment||''}</div>
+    </div>`).join('');
+
+  const sugHtml = (d.suggestions||[]).map(s =>
+    `<div class="wf-suggestion">${s}</div>`).join('');
+
+  return `<div class="wf-result-box">
+    <div style="display:flex;align-items:baseline;gap:.5rem;margin-bottom:.5rem">
+      <div class="wf-score" style="color:${scoreColor}">${score}</div>
+      <div class="wf-score-label">/ 100점</div>
+    </div>
+    <div class="wf-summary">${d.summary||''}</div>
+    ${errHtml ? `<div class="wf-section-title" style="color:#ef4444">🔴 비문 / 어색한 표현</div>${errHtml}` : ''}
+    ${factHtml ? `<div class="wf-section-title" style="color:#fbbf24">🟡 사실 오류 / 불명확한 정보</div>${factHtml}` : ''}
+    ${strHtml ? `<div class="wf-section-title" style="color:#22c55e">🟢 잘 쓴 표현</div>${strHtml}` : ''}
+    ${sugHtml ? `<div class="wf-section-title" style="color:var(--muted)">💡 개선 제안</div><div class="wf-suggestions">${sugHtml}</div>` : ''}
+    ${(d.visualLanguage||[]).length ? `<div class="wf-section-title" style="color:#c084fc">🎥 영상 언어 제안</div>
+      <div class="wf-vl-grid">${(d.visualLanguage||[]).map(v =>
+        `<div class="wf-vl-item"><div class="wf-vl-term">${v.term||''}</div><div class="wf-vl-apply">${v.application||''}</div></div>`
+      ).join('')}</div>` : ''}
+    <div class="wf-export-wrap">
+      <button class="wr-export-btn" onclick="wfExportDocx(${JSON.stringify(d).replace(/'/g,"&#39;")}, ${JSON.stringify(originalText).replace(/'/g,"&#39;")})">📄 피드백 워드 내보내기</button>
+    </div>
+  </div>`;
+}
+
+function wfExportDocx(d, originalText) {
+  const today = new Date().toLocaleDateString('ko-KR');
+  const score = d.score || 0;
+  const scoreColor = score >= 80 ? '#22c55e' : score >= 60 ? '#f97316' : '#ef4444';
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+
+  const errRows = (d.errors||[]).map(e =>
+    `<tr><td style="color:#c00;padding:6px 8px;border:1px solid #eee;">"${esc(e.original)}"</td>
+     <td style="padding:6px 8px;border:1px solid #eee;">${esc(e.issue)}</td>
+     <td style="color:#1a7f37;padding:6px 8px;border:1px solid #eee;">${esc(e.fix)}</td></tr>`).join('');
+
+  const factRows = (d.facts||[]).map(f =>
+    `<tr><td style="color:#856404;padding:6px 8px;border:1px solid #eee;">"${esc(f.original)}"</td>
+     <td style="padding:6px 8px;border:1px solid #eee;">${esc(f.issue)}</td></tr>`).join('');
+
+  const strRows = (d.strengths||[]).map(s =>
+    `<tr><td style="color:#1a7f37;padding:6px 8px;border:1px solid #eee;">"${esc(s.original)}"</td>
+     <td style="padding:6px 8px;border:1px solid #eee;">${esc(s.comment)}</td></tr>`).join('');
+
+  const sugList = (d.suggestions||[]).map(s => `<li>${esc(s)}</li>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+  body { font-family: '맑은 고딕','Malgun Gothic',Arial,sans-serif; font-size:11pt; margin:40px; color:#222; line-height:1.7; }
+  h1 { font-size:16pt; color:#f97316; border-bottom:2px solid #f97316; padding-bottom:8px; }
+  h2 { font-size:12pt; margin:20px 0 6px; }
+  .score { font-size:28pt; font-weight:800; color:${scoreColor}; }
+  .summary { background:#f8f8f8; border-left:4px solid #f97316; padding:10px 14px; margin:12px 0; font-size:11pt; }
+  .original { background:#fafafa; border:1px solid #eee; border-radius:4px; padding:10px 14px; margin:10px 0 16px; font-size:11pt; }
+  table { width:100%; border-collapse:collapse; margin-bottom:16px; font-size:10pt; }
+  th { background:#f3f4f6; padding:6px 8px; border:1px solid #eee; text-align:left; font-size:10pt; }
+  li { margin-bottom:4px; }
+
+/* ══ 대본분석 가독성 개선 ══ */
+.sc-card{background:#1c1c1c;border:1px solid rgba(167,139,250,.2);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.6rem;transition:.2s;}
+.sc-card:hover{border-color:rgba(167,139,250,.35);}
+.sc-card-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:.55rem;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:.6rem;}
+.sc-tag.genre{background:rgba(167,139,250,.18);color:#c084fc;border:1px solid rgba(167,139,250,.3);font-size:.65rem;padding:.13rem .5rem;border-radius:4px;}
+.sc-body{font-size:.83rem;line-height:2;color:#ddd;background:rgba(0,0,0,.2);border-left:3px solid rgba(167,139,250,.4);padding:.75rem 1rem;border-radius:0 8px 8px 0;margin:.6rem 0;white-space:pre-wrap;}
+.sc-q-box{background:rgba(250,204,21,.04);border:1px solid rgba(250,204,21,.14);border-radius:8px;padding:.55rem .75rem;margin:.45rem 0;}
+.sc-q-label{font-size:.58rem;font-weight:800;color:var(--accent);letter-spacing:.06em;margin-bottom:.2rem;}
+.sc-q-text{font-size:.78rem;color:#eee;line-height:1.55;}
+.sc-form-label{font-size:.64rem;font-weight:700;color:#a78bfa;margin-bottom:.22rem;display:block;}
+.sc-form-ta{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:.5rem .7rem;color:#eee;font-size:.78rem;resize:vertical;min-height:56px;font-family:inherit;line-height:1.6;box-sizing:border-box;}
+.sc-form-ta:focus{outline:none;border-color:rgba(167,139,250,.4);}
+.sc-fb-score-row{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.45rem;}
+.sc-fb-score-item{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.05);border-radius:7px;padding:.32rem .55rem;min-width:52px;}
+.sc-fb-score-num{font-size:1.05rem;font-weight:800;color:#c084fc;}
+.sc-fb-score-label{font-size:.52rem;color:var(--muted);margin-top:.04rem;text-align:center;}
+.sc-foot{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.6rem;padding-top:.45rem;border-top:1px solid rgba(255,255,255,.05);}
+/* ══ 점수 분석 패널 ══ */
+.score-wrap{max-width:600px;}
+.score-section-title{font-size:.93rem;font-weight:800;color:#eee;margin-bottom:.2rem;}
+.score-subtitle{font-size:.66rem;color:var(--muted);margin-bottom:1.1rem;}
+.score-group{margin-bottom:1.2rem;}
+.score-group-label{font-size:.72rem;font-weight:700;color:#a78bfa;margin-bottom:.5rem;padding-bottom:.28rem;border-bottom:1px solid rgba(167,139,250,.2);}
+.score-items{display:flex;flex-direction:column;gap:.32rem;}
+.score-item{display:flex;align-items:center;gap:.6rem;padding:.48rem .65rem;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:.15s;}
+.score-item:hover{border-color:rgba(167,139,250,.32);background:rgba(167,139,250,.05);}
+.score-item-label{font-size:.74rem;color:#eee;flex:1;}
+.score-item-bar-wrap{flex:2;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+.score-item-bar{height:100%;border-radius:3px;transition:.5s ease;}
+.score-item-val{font-size:.77rem;font-weight:700;width:32px;text-align:right;flex-shrink:0;}
+.score-item-count{font-size:.59rem;color:var(--muted);flex-shrink:0;width:22px;text-align:right;}
+.score-overall{display:flex;align-items:center;gap:.65rem;padding:.65rem .95rem;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.2);border-radius:10px;margin:1rem 0 1.1rem;}
+.score-overall-label{font-size:.74rem;color:#fcd34d;font-weight:700;flex:1;}
+.score-overall-val{font-size:1.55rem;font-weight:800;color:var(--accent);}
+.score-history-wrap{margin-top:.3rem;}
+.score-history-title{font-size:.66rem;color:var(--muted);margin-bottom:.35rem;}
+.score-no-data{font-size:.72rem;color:var(--muted);text-align:center;padding:1rem;background:rgba(255,255,255,.03);border-radius:8px;}
+/* ══ 공부법 팝업 ══ */
+#study-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(6px);}
+.study-modal{background:#1a1a1a;border:1px solid rgba(167,139,250,.22);border-radius:14px;width:100%;max-width:540px;max-height:85vh;overflow-y:auto;padding:1.35rem;animation:modalIn .2s ease;}
+.study-modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;}
+.study-modal-title{font-size:.88rem;font-weight:800;color:#eee;}
+.study-modal-close{font-size:.68rem;padding:.24rem .58rem;border-radius:5px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--muted);cursor:pointer;}
+.study-score-badge{display:inline-block;padding:.32rem .72rem;border-radius:20px;font-size:.68rem;font-weight:700;margin-bottom:.85rem;}
+.study-methods{display:flex;flex-direction:column;gap:.58rem;}
+.study-method-item{padding:.65rem .8rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:9px;}
+.study-method-num{font-size:.57rem;font-weight:800;color:#a78bfa;letter-spacing:.06em;margin-bottom:.13rem;}
+.study-method-title{font-size:.77rem;font-weight:700;color:#eee;margin-bottom:.25rem;}
+.study-method-desc{font-size:.71rem;color:#bbb;line-height:1.65;}
+.study-method-tip{font-size:.65rem;color:#fcd34d;margin-top:.28rem;padding:.2rem .45rem;background:rgba(250,204,21,.05);border-radius:4px;}
+
+/* ══ 버튼 통합 리디자인 ══ */
+
+/* 공통 기반 */
+button{font-family:inherit;}
+
+/* 뉴스 불러오기 메인 버튼 */
+
+/* 대본 생성 버튼 */
+
+/* 작문 예제 생성 버튼 */
+
+/* AI 첨삭 버튼 */
+
+/* 근거추출 버튼 */
+
+/* 스크랩 버튼 */
+
+/* 키워드 관리 버튼 */
+
+/* 키워드 추가 버튼 */
+
+/* 전체 접기/펼치기 */
+
+/* 대본 카드 하단 버튼들 */
+.sc-foot-btn
+.sc-foot-btn
+
+/* 대본 분석 제출 */
+
+/* 모범작문 보기 버튼 */
+
+/* 관련기사 보기 */
+
+/* 워드 내보내기 */
+.wr-export-btn,.wf-export-btn,
+.wr-export-btn:hover,.wf-export-btn:hover,
+
+/* 접기/펼치기 토글 */
+
+/* 탭 버튼 */
+
+.wr-controls{display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap;}
+
+.tl-box-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;}
+.tl-controls{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:.75rem;}
+.tl-item{padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.tl-item:last-child{border:none;}
+.tl-item-date{font-size:.62rem;color:var(--accent);font-weight:700;margin-bottom:.15rem;}
+.tl-item-text{font-size:.75rem;color:#ddd;line-height:1.55;}
+</style>
+</head><body>
+<h1>📄 작문 피드백 리포트</h1>
+<div style="font-size:10pt;color:#666;margin-bottom:16px;">${today}</div>
+<div class="score">${score}<span style="font-size:14pt;font-weight:400;color:#666;"> / 100점</span></div>
+<div class="summary">${esc(d.summary)}</div>
+
+<h2>📝 원문</h2>
+<div class="original">${esc(originalText)}</div>
+
+${errRows ? `<h2 style="color:#c00">🔴 비문 / 어색한 표현</h2>
+<table><tr><th>원문 구절</th><th>문제점</th><th>수정 제안</th></tr>${errRows}</table>` : ''}
+
+${factRows ? `<h2 style="color:#856404">🟡 사실 오류 / 불명확한 정보</h2>
+<table><tr><th>원문 구절</th><th>지적 사항</th></tr>${factRows}</table>` : ''}
+
+${strRows ? `<h2 style="color:#1a7f37">🟢 잘 쓴 표현</h2>
+<table><tr><th>원문 구절</th><th>강점</th></tr>${strRows}</table>` : ''}
+
+${sugList ? `<h2 style="color:#555">💡 개선 제안</h2><ul>${sugList}</ul>` : ''}
+</body></html>`;
+
+  const blob = new Blob(['﻿' + html], { type: 'application/msword;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `작문피드백_${today.replace(/\. /g,'-').replace('.','')}.doc`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function renderWeaknessChart() {
+  const d = scData();
+  const hist = (d.scoreHistory || []).slice(-20);
+  const wrap = document.getElementById('sc-weakness-wrap');
+  const el = document.getElementById('sc-weakness-chart');
+  if(!wrap||!el)return;
+  if (!el) return;
+  if (!hist.length) { if(wrap) wrap.style.display='none'; return; }
+  if(wrap) wrap.style.display='block';
+
+  const keys = ['intro','conflict','dialogue','direction'];
+  const labels = { intro:'씬 소개', conflict:'갈등 구조', dialogue:'핵심 대사', direction:'연출 제안' };
+  const colors = { intro:'#c084fc', conflict:'var(--blue)', dialogue:'#fbbf24', direction:'var(--green)' };
+
+  // 항목별 평균
+  const avgs = {};
+  keys.forEach(k => {
+    avgs[k] = hist.reduce((s,h) => s + (h.scores?.[k] || 0), 0) / hist.length;
+  });
+
+  // 최근 추이 (5회)
+  const recent = hist.slice(-5);
+  const recentAvgs = {};
+  keys.forEach(k => {
+    recentAvgs[k] = recent.length
+      ? recent.reduce((s,h) => s + (h.scores?.[k] || 0), 0) / recent.length
+      : avgs[k];
+  });
+
+  const sorted = keys.slice().sort((a,b) => avgs[a] - avgs[b]);
+  const weakest = sorted[0];
+
+  const bars = keys.map(k => {
+    const pct = (avgs[k] / 5) * 100;
+    const rPct = (recentAvgs[k] / 5) * 100;
+    const trend = recentAvgs[k] - avgs[k];
+    const trendIcon = trend > 0.2 ? '↑' : trend < -0.2 ? '↓' : '→';
+    const trendColor = trend > 0.2 ? 'var(--green)' : trend < -0.2 ? '#f87171' : 'var(--muted)';
+    const isWeak = k === weakest;
+    return `<div style="margin-bottom:.55rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.7rem;margin-bottom:.25rem;">
+        <span style="color:${colors[k]};font-weight:${isWeak?'800':'600'};">${labels[k]}${isWeak?' ⚠️':''}</span>
+        <span style="display:flex;gap:.4rem;align-items:center;">
+          <span style="color:${trendColor};font-size:.65rem;">${trendIcon} 최근</span>
+          <span style="color:#fff;font-weight:700;">${avgs[k].toFixed(1)}<span style="color:var(--muted);font-weight:400;">/5</span></span>
+        </span>
+      </div>
+      <div style="background:#1a1a1a;border-radius:4px;height:6px;position:relative;">
+        <div style="background:${colors[k]};opacity:.3;width:${pct}%;height:6px;border-radius:4px;position:absolute;"></div>
+        <div style="background:${colors[k]};width:${rPct}%;height:6px;border-radius:4px;position:absolute;transition:width .6s;"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 장르별 약점
+  const genreMap = {};
+  hist.forEach(h => {
+    if (!h.genre) return;
+    if (!genreMap[h.genre]) genreMap[h.genre] = { total: 0, count: 0 };
+    const avg = keys.reduce((s,k) => s + (h.scores?.[k]||0), 0) / keys.length;
+    genreMap[h.genre].total += avg;
+    genreMap[h.genre].count++;
+  });
+  const genreStats = Object.entries(genreMap)
+    .map(([g,v]) => ({ g, avg: v.total/v.count }))
+    .sort((a,b) => a.avg - b.avg);
+  const weakGenre = genreStats[0];
+
+  const genreHtml = genreStats.length > 1
+    ? `<div style="margin-top:.7rem;font-size:.7rem;color:var(--muted);">
+        장르별: ${genreStats.map(({g,avg}) =>
+          `<span style="margin-right:.4rem;color:${avg<3?'#f87171':avg<4?'#fbbf24':'var(--green)'};">${g} ${avg.toFixed(1)}점</span>`
+        ).join('')}
+      </div>` : '';
+
+  const tipHtml = `<div style="margin-top:.6rem;padding:.5rem .7rem;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:6px;font-size:.72rem;color:#f0d060;">
+    💡 ${avgs[weakest] >= 4
+      ? '전반적으로 잘하고 있어요! 고르게 유지하세요.'
+      : `<b>${labels[weakest]}</b>이 가장 약해요 (평균 ${avgs[weakest].toFixed(1)}점). 다음 대본 생성 시 이 부분을 집중 연습하도록 씬이 설계됩니다.`}
+  </div>`;
+
+  el.innerHTML = bars + genreHtml + tipHtml;
+}
+
+function toggleHistory() {
+  const box = document.getElementById('sc-history-box');
+  if (!box) return;
+  box.classList.toggle('on');
+  if (box.classList.contains('on')) renderHistory();
+}
+
+/* ── 오늘의 참고 작품 ── */
+
+loadKw();loadScraps();
+  // 오답노트 초기 카운트
+  (function(){ renderWrongNotes(); updateWrongCount(); scLoadList(); wrLoad(); })();
+
+function closeTL(){}
+
+// ══ 점수 분석 시스템 ══
+var SCORE_SC=[
+  {key:'intro',label:'씬 소개 / 장면 설정'},
+  {key:'conflict',label:'갈등 구조 / 서사 흐름'},
+  {key:'dialogue',label:'핵심 대사 / 인물 표현'},
+  {key:'direction',label:'연출 제안 / 영상 언어'},
+];
+var SCORE_WR=[
+  {key:'logic',label:'논리 구조 / 근거 제시'},
+  {key:'vocab',label:'어휘 / 문장력'},
+  {key:'thesis',label:'주제 의식 / 입장 명확성'},
+  {key:'conclude',label:'마무리 / 결론 설득력'},
+];
+var STUDY_DB={
+  intro:{title:'씬 소개 / 장면 설정',m:[
+    {t:'시나리오 씬헤딩 필사',d:'수상작 시나리오 10편의 씬헤딩을 필사하며 장면 설정 공식 체화. INT./EXT. 장소 – 시간 형식을 완벽히 익히세요.',tip:'넷플릭스 한국 드라마 공모전 수상작 참고'},
+    {t:'1씬 1문장 요약 훈련',d:'드라마 1화를 보며 각 씬을 한 문장으로 요약. 배경·인물·감정·목적이 모두 들어가야 함. 하루 5씬씩.',tip:'2주면 체감이 달라짐'},
+    {t:'장소의 감정화 연습',d:'같은 장소(병원 복도)를 긴장/슬픔/희망 3가지 버전의 씬 소개로 써보기. 연출 의도를 먼저 정하고 장면 설계.',tip:'장소는 감정의 연장이다'},
+  ]},
+  conflict:{title:'갈등 구조 / 서사 흐름',m:[
+    {t:'갈등 유형 3가지 씬',d:'인물↔인물 / 인물↔환경 / 인물↔자신 각각을 씬으로 만들기. 갈등 없는 씬은 씬이 아니다.',tip:'항상 대립 축을 먼저 설계'},
+    {t:'씬 구조 역설계',d:'좋아하는 드라마 씬을 발단→전개→절정→결말로 분해 후 재작성. 3분 분량이면 충분.',tip:'구조가 눈에 보이기 시작함'},
+    {t:'갈등 에스컬레이션',d:'같은 갈등을 냉전→언쟁→폭발 3단계로 써보기. 감정 온도를 컨트롤하는 것이 작가의 실력.',tip:'레벨 차이가 클수록 극적 효과 ↑'},
+  ]},
+  dialogue:{title:'핵심 대사 / 인물 표현',m:[
+    {t:'대사 50% 다이어트',d:'내가 쓴 대사 분량을 절반으로 줄이면서 같은 감정 전달. 줄이면서 오히려 강해져요.',tip:'"말하지 않는 것"이 대사보다 강하다'},
+    {t:'인물별 화법 프로필',d:'3명의 인물에게 각각 고유한 말버릇/어휘/호흡 설계. 대사만 봐도 누가 말하는지 알아야 함.',tip:'주변 사람 관찰로 화법 채집'},
+    {t:'감정 상태별 변주',d:'"나 갈게" 한 마디를 분노/슬픔/체념/기쁨 4가지로 다르게 써보기.',tip:'감정이 다르면 문장 구조도 달라진다'},
+  ]},
+  direction:{title:'연출 제안 / 영상 언어',m:[
+    {t:'9가지 영상언어 체크',d:'샷사이즈·앵글·무브먼트·렌즈·구도·색온도·피사계심도·편집·사운드 — 씬마다 의식적으로 제안. 처음엔 3개만.',tip:'ThinkOiio 유튜브 참고'},
+    {t:'무성영화 씬 쓰기',d:'대사 없이 행동과 편집만으로 감정을 전달하는 씬 1개 완성.',tip:'연출 제안이 약할 때 가장 효과적인 훈련'},
+    {t:'레퍼런스 shot by shot',d:'좋아하는 씬 1개를 샷별로 분해 — 왜 이 앵글인지, 왜 이 컷인지.',tip:'씨네21 분석 기사 참고'},
+  ]},
+  logic:{title:'논리 구조 / 근거 제시',m:[
+    {t:'근거 3단 구조 반복',d:'주장→근거(사례/데이터)→재강조 구조를 매일 1단락씩. 처음엔 100자, 점점 늘리기.',tip:'근거 없는 주장은 감상문'},
+    {t:'반론 수용 연습',d:'"물론 ~라는 반론이 있다. 하지만 ~" 패턴으로 반론 인정 후 재반박.',tip:'입시 고득점의 핵심은 반론 처리'},
+    {t:'근거추출 기능 활용',d:'이 앱 근거추출로 기사 3개에서 논거 3개씩 뽑기. 찬성/반대 분류 후 작문 활용.',tip:'배경 지식이 논리를 뒷받침한다'},
+  ]},
+  vocab:{title:'어휘 / 문장력',m:[
+    {t:'사설 필사',d:'조선/한겨레/경향 사설 중 하나를 매일 필사. 필사 후 "내 말로 바꿔 쓰기"까지.',tip:'가장 빠른 문장력 향상법'},
+    {t:'어휘 레벨업',d:'자주 쓰는 단어 10개를 더 정확한 표현으로 교체. "중요하다" → "핵심적이다/결정적이다"',tip:'국어사전 유의어 적극 활용'},
+    {t:'문장 다이어트',d:'쓴 문단에서 불필요한 수식어·중복·접속어 제거. 30% 줄이고도 의미 전달되면 성공.',tip:'짧고 명확한 문장이 항상 강하다'},
+  ]},
+  thesis:{title:'주제 의식 / 입장 명확성',m:[
+    {t:'한 문장 주제문',d:'작문 시작 전 "나는 ~기 때문에 ~해야 한다고 생각한다"를 정확히 한 문장으로 먼저 쓰기.',tip:'주제문이 흔들리면 전체가 흔들린다'},
+    {t:'찬반 양쪽 써보기',d:'같은 주제로 찬성/반대 두 버전 각각 써보기. 양쪽 알아야 더 강한 한쪽 선택 가능.',tip:'입시 작문은 입장을 선택하는 것'},
+    {t:'뉴스 보고 의견 3줄',d:'이 앱 뉴스 읽고 "나는 어떻게 생각하는가" 매일 3줄 일기.',tip:'주제 의식은 결국 세계관에서 나온다'},
+  ]},
+  conclude:{title:'마무리 / 결론 설득력',m:[
+    {t:'결론 유형 4가지',d:'요약형/전망형/호소형/역설형 4가지 결론 패턴을 같은 주제로 각각 써보기.',tip:'결론에서 새 논거 절대 금지'},
+    {t:'수미상관 구조',d:'서론 첫 문장과 결론 마지막 문장이 호응하도록 연습. 처음 화두로 돌아오기.',tip:'가장 깔끔한 마무리 구조'},
+    {t:'결론만 따로 쓰기',d:'서론/본론 없이 결론 100~150자만 완성. 핵심 주장과 여운을 모두 담아야.',tip:'"뭘 말하려는지 모르면" 결론이 약해진다'},
+  ]},
+};
+
+function renderScorePanel(){
+  const sd=scData(),sHist=sd.scoreHistory||[];
+  const wHist=JSON.parse(localStorage.getItem('wr_score_history')||'[]');
+  const siEl=document.getElementById('score-script-items');
+  const wiEl=document.getElementById('score-writing-items');
+  const ovEl=document.getElementById('score-overall-val');
+  if(!siEl)return;
+  const avg=(hist,key)=>{const v=hist.map(h=>h.scores&&h.scores[key]).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;};
+  const col=v=>v==null?'#555':v>=8?'#4ade80':v>=6?'#facc15':v>=4?'#fb923c':'#f87171';
+  const renderItems=(items,hist,label)=>{
+    const avgs=items.map(it=>({...it,v:avg(hist,it.key)}));
+    if(avgs.every(a=>a.v==null))return '<div class="score-no-data">아직 '+label+' 데이터가 없어요.<br>첨삭을 받으면 점수가 쌓여요!</div>';
+    const rows=avgs.map(it=>{
+      const c2=col(it.v);
+      const pct=it.v!=null?((it.v/10)*100).toFixed(0):0;
+      const grade=it.v==null?'-':it.v>=8?'A':it.v>=6?'B':it.v>=4?'C':'D';
+      return '<tr class="score-tr" data-key="'+it.key+'" data-score="'+(it.v!=null?it.v.toFixed(2):'null')+'" onclick="openStudyModal(this.dataset.key,this.dataset.score)" title="클릭 시 보완 공부법 보기">'+
+        '<td class="score-td-label">'+it.label+'</td>'+
+        '<td class="score-td-bar"><div class="score-td-bar-wrap"><div class="score-td-bar-fill" style="width:'+pct+'%;background:'+c2+'"></div></div></td>'+
+        '<td class="score-td-val" style="color:'+c2+'">'+(it.v!=null?it.v.toFixed(1):'--')+'</td>'+
+        '<td class="score-td-grade" style="color:'+c2+'">'+grade+'</td>'+
+        '<td class="score-td-cnt">'+hist.length+'회</td>'+
+        '<td class="score-td-study">📚 공부법</td>'+
+      '</tr>';
+    }).join('');
+    return '<table class="score-table"><thead><tr>'+
+      '<th>항목</th><th>진행도</th><th>평균</th><th>등급</th><th>횟수</th><th>학습</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table>';
+  };
+  siEl.innerHTML=renderItems(SCORE_SC,sHist,'대본분석');
+  wiEl.innerHTML=renderItems(SCORE_WR,wHist,'작문');
+  const allV=[...SCORE_SC.map(it=>avg(sHist,it.key)),...SCORE_WR.map(it=>avg(wHist,it.key))].filter(v=>v!=null);
+  if(ovEl)ovEl.textContent=allV.length?(allV.reduce((a,b)=>a+b,0)/allV.length).toFixed(1)+'점':'--';
+  setTimeout(()=>renderScoreTrend(sHist,wHist),50);
+}
+
+function renderScoreTrend(sH,wH){
+  const canvas=document.getElementById('score-trend-chart');
+  if(!canvas)return;
+  const W=canvas.parentElement?canvas.parentElement.offsetWidth:500;
+  canvas.width=W;canvas.height=70;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,70);
+  const lineAvg=hist=>hist.slice(-10).map(h=>{const v=Object.values(h.scores||{}).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;}).filter(v=>v!=null);
+  const draw=(data,color)=>{
+    if(data.length<2)return;
+    ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineCap='round';
+    data.forEach((v,i)=>{const x=10+(i/(data.length-1))*(W-20),y=62-(v/10)*54;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+    data.forEach((v,i)=>{const x=10+(i/(data.length-1))*(W-20),y=62-(v/10)*54;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
+  };
+  draw(lineAvg(sH),'#a78bfa');
+  draw(lineAvg(wH),'#4ade80');
+}
+
+function openStudyModal(key,score){
+  const data=STUDY_DB[key];if(!data)return;
+  document.getElementById('study-overlay').style.display='flex';
+  document.getElementById('study-modal-title').textContent='📚 '+data.title+' 보완법';
+  const v=parseFloat(score);
+  const c2=isNaN(v)?'#888':v>=8?'#4ade80':v>=6?'#facc15':v>=4?'#fb923c':'#f87171';
+  const msg=isNaN(v)?'첨삭을 받으면 점수가 쌓여요':v>=8?'잘하고 있어요! 유지가 목표':v>=6?'보통 수준, 집중하면 고득점 가능':v>=4?'집중 보완 필요':'우선순위 1번 항목';
+  document.getElementById('study-score-badge').innerHTML='<div class="study-score-badge" style="background:'+c2+'18;border:1px solid '+c2+';color:'+c2+'">'+(isNaN(v)?msg:'현재 평균 '+v.toFixed(1)+'점 · '+msg)+'</div>';
+  document.getElementById('study-modal-body').innerHTML='<div class="study-methods">'+data.m.map((m,i)=>'<div class="study-method-item"><div class="study-method-num">방법 '+(i+1)+'</div><div class="study-method-title">'+m.t+'</div><div class="study-method-desc">'+m.d+'</div><div class="study-method-tip">💡 '+m.tip+'</div></div>').join('')+'</div>';
+}
+
+function closeStudyModal(){
+  const ov=document.getElementById('study-overlay');
+  if(ov)ov.style.display='none';
+}
+
+function saveWritingScore(scores){
+  const hist=JSON.parse(localStorage.getItem('wr_score_history')||'[]');
+  hist.unshift({date:new Date().toISOString(),scores});
+  localStorage.setItem('wr_score_history',JSON.stringify(hist.slice(0,50)));
+}
+
+function openTL(){}
+function setTLRange(b){
+  document.querySelectorAll('.tl-chip').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+}
+
+async function genTL(){
+  const days=parseInt(document.querySelector('.tl-chip.active')?.dataset.days||'7');
+  const kw=document.getElementById('tl-kw-sel')?.value||'';
+  const body=document.getElementById('tl-body');
+  if(!body)return;
+  body.innerHTML='<div style="color:var(--muted);font-size:.78rem;text-align:center;padding:1.5rem">타임라인 생성 중...</div>';
+  try{
+    const hl=(window._hl||[]).filter(a=>!kw||(a.relKws||[]).includes(kw));
+    const r=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({headlines:hl.slice(0,20),keyword:kw,mode:'timeline',days})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'실패');
+    body.innerHTML=renderTL(d.timeline||d.summary||'');
+  }catch(e){
+    body.innerHTML='<div style="color:#ef4444;font-size:.75rem;padding:.5rem">생성 실패: '+e.message+'</div>';
+  }
+}
+
+function renderTL(data){
+  if(typeof data==='string') return '<div style="font-size:.78rem;line-height:1.7;color:#ddd;white-space:pre-wrap">'+data+'</div>';
+  if(!Array.isArray(data)) return '<div style="font-size:.78rem;color:#ddd">'+JSON.stringify(data)+'</div>';
+  return data.map(item=>'<div class="tl-item"><div class="tl-item-date">'+(item.date||'')+'</div><div class="tl-item-text">'+(item.event||item.content||'')+'</div></div>').join('');
+}
+
+function exportAllWriting(){
+  const cards = document.querySelectorAll('.wr-card');
+  if(!cards.length){alert('예제를 먼저 생성해주세요');return;}
+  const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  const esc = s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>body{font-family:'맑은 고딕',Arial,sans-serif;font-size:11pt;line-height:1.8;margin:40px;color:#222;}
+h1{font-size:15pt;color:#FA7B2C;border-bottom:2px solid #FA7B2C;padding-bottom:6px;margin:20px 0 8px;}
+h2{font-size:12pt;color:#555;margin:14px 0 4px;}
+.q{background:#fff8f3;border-left:4px solid #FA7B2C;padding:8px 12px;margin-bottom:10px;font-weight:bold;}
+.hint{color:#666;font-size:10pt;margin:4px 0;}
+.tag{display:inline-block;background:#f0f0f0;border-radius:3px;padding:1px 6px;font-size:9pt;margin:2px;}
+hr{border:none;border-top:1px solid #ddd;margin:18px 0;}
+
+
+.score-table{width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:.5rem;}
+.score-table thead tr{background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.1);}
+.score-table th{padding:.45rem .6rem;text-align:left;color:var(--muted);font-weight:600;font-size:.68rem;}
+.score-tr{cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:.15s;}
+.score-tr:hover{background:rgba(167,139,250,.07);}
+.score-td-label{padding:.45rem .6rem;color:#eee;font-weight:500;}
+.score-td-bar{padding:.45rem .6rem;width:35%;}
+.score-td-bar-wrap{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+.score-td-bar-fill{height:100%;border-radius:3px;transition:.4s ease;}
+.score-td-val{padding:.45rem .5rem;font-weight:700;text-align:center;width:42px;}
+.score-td-grade{padding:.45rem .4rem;font-weight:800;text-align:center;width:32px;}
+.score-td-cnt{padding:.45rem .5rem;color:var(--muted);text-align:center;width:36px;}
+.score-td-study{padding:.45rem .5rem;color:#a78bfa;text-align:center;font-size:.65rem;width:48px;}
+.score-td-study:hover{color:#c084fc;}
+
+</style></head><body>
+<h1>📝 작문 예제 모음 · ${today}</h1>`;
+  cards.forEach((card,i)=>{
+    const title=card.querySelector('.wr-num')?.textContent||('예제 '+(i+1));
+    const question=card.querySelector('.wr-question')?.textContent||'';
+    const hints=[...card.querySelectorAll('.wr-hint-item')].map(h=>h.textContent).join(' / ');
+    const tags=[...card.querySelectorAll('.wr-tag')].map(t=>`<span class="tag">${esc(t.textContent)}</span>`).join(' ');
+    const model=card.querySelector('.wr-model-box');
+    const essay=model?.dataset?.essay?JSON.parse(model.dataset.essay):null;
+    html+=`<h1>${esc(title)}</h1>
+<div class="q">📋 ${esc(question)}</div>
+<h2>✏️ 작성 포인트</h2><p class="hint">${esc(hints)}</p>
+<p>${tags}</p>`;
+    if(essay?.essay){
+      const e=essay.essay;
+      html+=`<h2>📄 모범 작문</h2>
+<p><b>① 서론</b><br>${esc(e.p1||'')}</p>
+<p><b>② 본론 1</b><br>${esc(e.p2||'')}</p>
+<p><b>③ 본론 2</b><br>${esc(e.p3||'')}</p>
+<p><b>④ 본론 3</b><br>${esc(e.p4||'')}</p>
+<p><b>⑤ 결론</b><br>${esc(e.p5||e.p4||'')}</p>`;
+      if(e.tip) html+=`<p style="background:#fffde7;padding:8px;border-radius:4px;font-size:10pt">💡 ${esc(e.tip)}</p>`;
+    }
+    html+='<hr>';
+  });
+  html+='</body></html>';
+  const blob=new Blob(['\uFEFF'+html],{type:'application/msword;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='작문예제_'+today+'.doc';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function initTimelineTab(){
+  const sel=document.getElementById('tl-kw-sel2');
+  if(sel){
+    sel.innerHTML='<option value="">전체 키워드</option>'+kws.map(k=>'<option value="'+k+'">'+k+'</option>').join('');
+  }
+}
+
+function setTLChip(b){
+  document.querySelectorAll('#tl-range-chips .tl-chip').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+}
+
+async function genTimelineTab(){
+  const days=parseInt(document.querySelector('#tl-range-chips .tl-chip.active')?.dataset.days||'7');
+  const kw=document.getElementById('tl-kw-sel2')?.value||'';
+  const body=document.getElementById('tl-tab-body');
+  if(!body)return;
+  const btn=document.querySelector('.tl-gen-tab-btn');
+  if(btn){btn.disabled=true;btn.textContent='생성 중...';}
+  body.innerHTML='<div class="tl-tab-loading">타임라인 생성 중...</div>';
+  try{
+    const headlines=(window._hl||[]).filter(a=>!kw||(a.keywords||[]).includes(kw)||a.kw===kw);
+    const r=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mode:'timeline',headlines:headlines.slice(0,30),keyword:kw,days})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'실패');
+    const items=d.timeline||[];
+    if(!items.length){
+      body.innerHTML='<div class="tl-tab-empty">타임라인 데이터가 없어요. 뉴스를 먼저 불러와 주세요.</div>';
+    } else {
+      body.innerHTML='<div class="tl-tab-kw-label">'+(kw||'전체 키워드')+' · 최근 '+days+'일</div>'+
+        items.map(it=>'<div class="tl-tab-item"><div class="tl-tab-date">'+(it.date||'')+'</div><div class="tl-tab-text">'+(it.event||it.content||it.title||'')+'</div>'+(it.detail?'<div class="tl-tab-detail">'+it.detail+'</div>':'')+' </div>').join('');
+    }
+  }catch(e){
+    body.innerHTML='<div class="tl-tab-err">생성 실패: '+e.message+'</div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='📅 타임라인 생성';}
+  }
+}
+
+function exportWritingDocxData(e, question, kw, title){
+  if(typeof question === 'string' && question.includes('%')) question = decodeURIComponent(question);
+  if(typeof kw === 'string' && kw.includes('%')) kw = decodeURIComponent(kw);
+  if(typeof title === 'string' && title.includes('%')) title = decodeURIComponent(title);
+  const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace(/\.$/,'');
+  const esc = s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  const paras = [
+    {num:'① 서론', text:e.p1||''},
+    {num:'② 본론 1', text:e.p2||''},
+    {num:'③ 본론 2', text:e.p3||''},
+    {num:'④ 본론 3 (반론/대안)', text:e.p4||''},
+    {num:'⑤ 결론', text:e.p5||''},
+  ].filter(p=>p.text);
+  const parasHtml = paras.map(p=>`
+    <tr>
+      <td style="padding:6px 10px;background:#f3f0ff;border:1px solid #d4c5f9;font-weight:bold;color:#6a1b9a;width:140px;vertical-align:top;">${p.num}</td>
+      <td style="padding:8px 12px;border:1px solid #d4c5f9;line-height:1.85;">${esc(p.text)}</td>
+    </tr>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>body{font-family:'맑은 고딕',Arial,sans-serif;font-size:11pt;line-height:1.8;margin:40px;color:#222;}
+h1{font-size:15pt;color:#6a1b9a;border-bottom:2px solid #9c4dcc;padding-bottom:6px;margin:0 0 12px;}
+h2{font-size:12pt;color:#555;margin:16px 0 6px;}
+table{width:100%;border-collapse:collapse;}
+.q{background:#f9f5ff;border-left:4px solid #9c4dcc;padding:10px 14px;margin-bottom:12px;font-size:11pt;}
+.tip{background:#fffde7;border:1px solid #f0d060;border-radius:4px;padding:8px 12px;font-size:10.5pt;margin:12px 0;}
+.write-row td{height:60px;vertical-align:top;}
+</style></head><body>
+<h1>📝 모범 작문 · ${esc(title||kw)} · ${today}</h1>
+<div class="q">📋 ${esc(question)}</div>
+<h2>✨ 모범 작문 (5문단)</h2>
+<table>${parasHtml}</table>
+${e.tip ? '<div class="tip">💡 핵심 전략: '+esc(e.tip)+'</div>' : ''}
+<h2 style="margin-top:24px;color:#1565c0;">✍️ 내 작문 작성란</h2>
+<table>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;width:140px;vertical-align:top;">① 서론</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">② 본론 1</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">③ 본론 2</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">④ 본론 3</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">⑤ 결론</td><td style="padding:8px;border:1px solid #bbdefb;height:80px;">&nbsp;</td></tr>
+</table>
+</body></html>`;
+  const blob=new Blob(['\uFEFF'+html],{type:'application/msword;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='모범작문_'+today+'.doc';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function exportAnalysisDocx(sc, a) {
+  if(!sc || !a) return;
+  const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace(/\.$/,'');
+  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const scriptLines = (sc.script||'').split('\n').map(line => {
+    const t = line.trim();
+    if (!t) return '<p style="margin:2px">&nbsp;</p>';
+    if (t.startsWith('(')) return '<p style="color:#888;font-style:italic;margin:3px 0">'+esc(t)+'</p>';
+    const m = t.match(/^([가-힣A-Za-z\s]{1,8})(\s*\([^)]*\))?\s*:\s*(.*)/);
+    if (m) return '<p style="margin:3px 0"><b style="color:#5c3d11">'+esc(m[1].trim())+'</b>: '+esc(m[3])+'</p>';
+    return '<p style="margin:3px 0">'+esc(t)+'</p>';
+  }).join('');
+  const rows = [
+    {key:'characters', label:'👥 인물 관계 & 갈등'},
+    {key:'theme', label:'🎯 주제 & 감정선'},
+    {key:'direction', label:'🎥 연출 포인트'},
+    {key:'interview', label:'💬 면접 답변 예시'},
+  ].map(r => `<tr>
+    <td style="padding:6px 10px;background:#f1f8e9;border:1px solid #c8e6c9;font-weight:bold;color:#2e7d32;width:140px;vertical-align:top;">${r.label}</td>
+    <td style="padding:8px 12px;border:1px solid #c8e6c9;line-height:1.85;">${esc(a[r.key]||'')}</td>
+  </tr>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>body{font-family:'맑은 고딕',Arial,sans-serif;font-size:11pt;line-height:1.8;margin:40px;color:#222;}
+h1{font-size:15pt;color:#2e7d32;border-bottom:2px solid #4caf50;padding-bottom:6px;margin:0 0 12px;}
+h2{font-size:12pt;color:#555;margin:16px 0 6px;}
+.script-box{background:#fafaf7;border:1px solid #ddd;padding:12px 16px;margin-bottom:12px;font-size:10.5pt;}
+.q-box{background:#fffde7;border:1px solid #f0d060;padding:8px 14px;margin-bottom:14px;}
+table{width:100%;border-collapse:collapse;}
+.write-row td{height:55px;vertical-align:top;}
+
+/* ══ 버튼 색상 강제 오버라이드 ══ */
+button { color: inherit; }
+
+/* kw-chip (키워드 칩) */
+.kw-chip .kw-x { color:#a78bfa !important; }
+
+/* sel-btn */
+
+/* sc-action-btn */
+.sc-action-btn
+
+/* wr-news-btn */
+
+/* wr-tag */
+.wr-tag { background:rgba(74,222,128,.12) !important; color:#4ade80 !important; }
+
+/* sc-tag */
+.sc-tag { background:rgba(167,139,250,.15) !important; color:#c084fc !important; border:none !important; }
+.sc-tag.genre { background:rgba(250,204,21,.12) !important; color:#facc15 !important; }
+
+/* sc-foot-btn */
+
+/* tl-gen-tab-btn */
+
+/* tl-chip */
+
+/* wr-export-btn, wf-export-btn */
+.wr-export-btn, .wf-export-btn,
+.wr-export-btn:hover,
+
+/* kw-act-btn */
+
+/* sc-toggle-btn */
+
+/* wr-model-btn */
+
+/* scrap-btn */
+
+/* wf-gen-btn */
+
+/* tl-close */
+
+/* AI 첨삭 받기 */
+
+/* ══ 타임라인 탭 ══ */
+.tl-tab-wrap { padding:.5rem 0; }
+.tl-tab-header { margin-bottom:1rem; }
+.tl-tab-controls { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:.8rem; }
+.tl-tab-label { font-size:.65rem; color:var(--muted); margin-bottom:.35rem; }
+.tl-tab-body { min-height:100px; }
+.tl-tab-empty { color:var(--muted); font-size:.78rem; text-align:center; padding:2rem; }
+.tl-tab-loading { color:var(--muted); font-size:.78rem; text-align:center; padding:1.5rem; }
+.tl-tab-err { color:#ef4444; font-size:.75rem; padding:.5rem; }
+.tl-tab-kw-label { font-size:.68rem; font-weight:700; color:var(--accent); margin-bottom:.8rem; padding:.3rem .6rem; background:rgba(250,204,21,.08); border-radius:5px; display:inline-block; }
+.tl-tab-item { padding:.65rem 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.tl-tab-item:last-child { border:none; }
+.tl-tab-date { font-size:.65rem; color:var(--accent); font-weight:700; margin-bottom:.2rem; }
+.tl-tab-text { font-size:.78rem; color:#ddd; line-height:1.65; }
+.tl-tab-detail { font-size:.72rem; color:var(--muted); margin-top:.3rem; line-height:1.55; }
+
+
+
+.fetch-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;}
+
+/* 전체 버튼 기본 다크 */
+button:not(.fetch-btn):not(.wr-gen-btn):not(.sc-gen-btn):not(.wf-gen-btn):not(.tab-btn) {
+  color: inherit;
+}
+
+/* 날짜 칩 버튼 제거용 (혹시 남은 것) */
+
+/* kw-add-btn — 금색 미니 */
+
+/* nq-btn */
+
+/* argument / newsArgument 버튼 */
+.nq-arg-btn,
+
+/* 워드내보내기 */
+.wr-export-all-btn,.wf-export-btn,
+.wr-export-all-btn:hover,
+
+/* 초기화 */
+
+/* study popup */
+
+/* scrap-btn */
+.scrap-btn.on,.scrap-btn[data-on="true"]{background:rgba(250,204,21,.2)!important;border-color:rgba(250,204,21,.4)!important;color:#facc15!important;}
+
+/* AI 첨삭 버튼 */
+
+/* 관련기사 버튼 */
+
+/* ════ 버튼 & 컨트롤 단일 정의 ════ */
+.sc-action-btn
+
+.scrap-del{font-size:.62rem;padding:.18rem .45rem;border-radius:4px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;cursor:pointer;transition:.15s;margin-left:auto;}
+.scrap-del:hover{background:rgba(239,68,68,.2);}
+
+.card-meta-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.4rem;}
+
+/* ════════════════════════════════════
+   다크 버튼 시스템 — 전체 단일 정의
+   ════════════════════════════════════ */
+
+/* 탭 */
+.tab-btn{font-size:.72rem;padding:.55rem .85rem;border:none;background:none;
+  color:#888;border-bottom:2px solid transparent;cursor:pointer;
+  transition:.15s;font-weight:500;white-space:nowrap;}
+.tab-btn:hover{color:#bbb;}
+.tab-btn.active{color:#facc15;border-bottom-color:#facc15;font-weight:700;}
+
+/* 뉴스 불러오기 */
+.fetch-btn{display:inline-flex;align-items:center;gap:.35rem;
+  padding:.38rem .9rem;border-radius:7px;
+  background:rgba(250,204,21,.14);border:1px solid rgba(250,204,21,.35);
+  color:#facc15;font-size:.76rem;font-weight:700;cursor:pointer;transition:.15s;}
+.fetch-btn:hover{background:rgba(250,204,21,.24);border-color:rgba(250,204,21,.6);}
+.fetch-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* 날짜 드롭다운 */
+.day-sel{font-size:.76rem;font-weight:700;
+  padding:.32rem 1.4rem .32rem .55rem;
+  background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.35);
+  color:#facc15;border-radius:7px;cursor:pointer;outline:none;transition:.15s;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%23facc15'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .45rem center;}
+.day-sel:hover{background-color:rgba(250,204,21,.2);}
+.day-sel option{background:#18181b;color:#facc15;}
+
+/* 키워드 칩 */
+.kw-chip{font-size:.68rem;padding:.2rem .55rem;border-radius:100px;
+  background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);
+  color:#c084fc;cursor:pointer;transition:.15s;font-weight:500;}
+.kw-chip:hover{background:rgba(167,139,250,.2);}
+.kw-chip.active{background:rgba(167,139,250,.25);border-color:rgba(167,139,250,.45);color:#e0c6ff;font-weight:700;}
+.kw-add-btn{font-size:.7rem;padding:.2rem .55rem;border-radius:6px;
+  background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.3);
+  color:#facc15;cursor:pointer;transition:.15s;}
+.kw-add-btn:hover{background:rgba(250,204,21,.22);}
+.kw-act-btn{font-size:.65rem;padding:.22rem .5rem;border-radius:5px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;}
+.kw-act-btn:hover{background:rgba(255,255,255,.12);color:#eee;}
+
+/* 타임라인 */
+.tl-chip{font-size:.68rem;padding:.22rem .6rem;border-radius:20px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;font-weight:500;}
+.tl-chip:hover{background:rgba(255,255,255,.12);}
+.tl-chip.active{background:rgba(250,204,21,.18);border-color:rgba(250,204,21,.4);color:#facc15;font-weight:700;}
+.tl-gen-tab-btn,.tl-gen-btn{width:100%;padding:.42rem;border-radius:7px;
+  background:rgba(250,204,21,.14);border:1px solid rgba(250,204,21,.35);
+  color:#facc15;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;margin-top:.6rem;}
+.tl-gen-tab-btn:hover,.tl-gen-btn:hover{background:rgba(250,204,21,.24);}
+.tl-gen-tab-btn:disabled,.tl-gen-btn:disabled{opacity:.4;cursor:not-allowed;}
+.tl-close{font-size:.75rem;padding:.25rem .6rem;border-radius:5px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;}
+.tl-close:hover{background:rgba(255,255,255,.14);color:#eee;}
+.tl-kw-sel{width:100%;font-size:.75rem;padding:.35rem .5rem;
+  background:#1a1a1a;border:1px solid rgba(255,255,255,.12);
+  color:#ddd;border-radius:6px;outline:none;}
+
+/* 뉴스카드 하단 버튼 */
+.scrap-btn{font-size:.65rem;font-weight:600;padding:.2rem .5rem;border-radius:5px;
+  background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.22);
+  color:#d4a017;cursor:pointer;transition:.15s;}
+.scrap-btn:hover{background:rgba(250,204,21,.2);}
+.scrap-btn.on{background:rgba(250,204,21,.2);border-color:rgba(250,204,21,.42);color:#facc15;}
+.nq-btn{font-size:.65rem;font-weight:600;padding:.2rem .5rem;border-radius:5px;
+  background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);
+  color:#4ade80;cursor:pointer;transition:.15s;}
+.nq-btn:hover{background:rgba(74,222,128,.2);}
+.wr-news-btn{font-size:.65rem;font-weight:600;padding:.2rem .5rem;border-radius:5px;
+  background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.2);
+  color:#d4a017;cursor:pointer;transition:.15s;}
+.wr-news-btn:hover{background:rgba(250,204,21,.16);}
+.sum-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;
+  background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.22);
+  color:#c084fc;cursor:pointer;transition:.15s;}
+.sum-btn:hover{background:rgba(167,139,250,.2);}
+
+/* 대본분석 */
+.sc-gen-btn{display:inline-flex;align-items:center;gap:.35rem;
+  padding:.45rem 1.1rem;border-radius:7px;
+  background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.32);
+  color:#c084fc;font-size:.82rem;font-weight:700;cursor:pointer;transition:.15s;}
+.sc-gen-btn:hover{background:rgba(167,139,250,.26);}
+.sc-action-btn{font-size:.68rem;padding:.28rem .65rem;border-radius:6px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:#ccc;cursor:pointer;transition:.15s;}
+.sc-action-btn:hover{background:rgba(255,255,255,.12);color:#eee;}
+.sc-guide-btn{background:rgba(192,132,252,.12)!important;border-color:rgba(192,132,252,.28)!important;color:#c084fc!important;}
+.sc-guide-btn:hover{background:rgba(192,132,252,.22)!important;}
+.sc-export-btn{background:rgba(74,222,128,.1)!important;border-color:rgba(74,222,128,.25)!important;color:#4ade80!important;}
+.sc-export-btn:hover{background:rgba(74,222,128,.2)!important;}
+.sc-model-btn{background:rgba(167,139,250,.12)!important;border-color:rgba(167,139,250,.28)!important;color:#c084fc!important;}
+.sc-submit-btn{padding:.4rem .9rem;border-radius:6px;
+  background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.3);
+  color:#c084fc;font-size:.75rem;font-weight:600;cursor:pointer;transition:.15s;}
+.sc-submit-btn:hover{background:rgba(167,139,250,.26);}
+.sc-arg-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;
+  background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.22);
+  color:#60a5fa;cursor:pointer;transition:.15s;}
+.sc-arg-btn:hover{background:rgba(96,165,250,.2);}
+.sc-col-btn,.sc-toggle-btn,.sc-foot-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;}
+.sc-col-btn:hover,.sc-toggle-btn:hover,.sc-foot-btn:hover{background:rgba(255,255,255,.1);color:#eee;}
+
+/* sel-btn (칼럼 날짜 등) */
+.sel-btn{font-size:.68rem;padding:.22rem .5rem;border-radius:5px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;}
+.sel-btn:hover{background:rgba(255,255,255,.1);}
+.sel-btn.active{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#facc15;}
+
+/* 작문 */
+.wr-gen-btn{display:inline-flex;align-items:center;gap:.35rem;
+  padding:.4rem 1rem;border-radius:7px;
+  background:rgba(74,222,128,.16);border:1px solid rgba(74,222,128,.32);
+  color:#4ade80;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;}
+.wr-gen-btn:hover{background:rgba(74,222,128,.26);border-color:rgba(74,222,128,.5);}
+.wr-gen-btn:disabled{opacity:.4;cursor:not-allowed;}
+.wr-export-all-btn{display:inline-flex;align-items:center;gap:.35rem;
+  padding:.4rem .9rem;border-radius:7px;
+  background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.32);
+  color:#60a5fa;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;}
+.wr-export-all-btn:hover{background:rgba(96,165,250,.24);border-color:rgba(96,165,250,.5);}
+.wr-reset-btn{display:inline-flex;align-items:center;gap:.3rem;
+  padding:.4rem .9rem;border-radius:7px;
+  background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.28);
+  color:#fb7185;font-size:.78rem;font-weight:700;white-space:nowrap;cursor:pointer;transition:.15s;}
+.wr-reset-btn:hover{background:rgba(251,113,133,.22);border-color:rgba(251,113,133,.45);}
+.wr-model-btn{padding:.3rem .7rem;border-radius:6px;
+  background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.22);
+  color:#c084fc;font-size:.72rem;font-weight:600;cursor:pointer;transition:.15s;}
+.wr-model-btn:hover{background:rgba(167,139,250,.2);}
+.wr-export-btn{font-size:.7rem;padding:.28rem .65rem;border-radius:6px;
+  background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.22);
+  color:#60a5fa;cursor:pointer;transition:.15s;font-weight:600;}
+.wr-export-btn:hover{background:rgba(96,165,250,.2);}
+.wr-guide-btn,.wr-btn,.wr-toggle-btn{font-size:.68rem;padding:.22rem .5rem;border-radius:5px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;}
+.wr-guide-btn:hover,.wr-btn:hover,.wr-toggle-btn:hover{background:rgba(255,255,255,.1);color:#eee;}
+.wm-btn{font-size:.68rem;padding:.22rem .5rem;border-radius:5px;
+  background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.22);
+  color:#d4a017;cursor:pointer;transition:.15s;}
+.wm-btn:hover{background:rgba(250,204,21,.18);}
+.wr-sel{font-size:.72rem;padding:.25rem .5rem;border-radius:5px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;}
+
+/* 작문 AI 첨삭 */
+.wf-gen-btn{display:block;width:100%;padding:.55rem;border-radius:7px;
+  background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.35);
+  color:#c084fc;font-size:.8rem;font-weight:700;cursor:pointer;transition:.15s;}
+.wf-gen-btn:hover{background:rgba(167,139,250,.28);}
+.wf-gen-btn:disabled{opacity:.4;cursor:not-allowed;}
+.wf-export-btn{font-size:.7rem;padding:.28rem .65rem;border-radius:6px;
+  background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);
+  color:#4ade80;cursor:pointer;transition:.15s;font-weight:600;}
+.wf-export-btn:hover{background:rgba(74,222,128,.2);}
+
+/* 근거추출 모달 */
+.nq-submit-btn{padding:.4rem 1rem;border-radius:6px;
+  background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.3);
+  color:#c084fc;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s;}
+.nq-submit-btn:hover{background:rgba(167,139,250,.26);}
+.nq-wrong-btn{padding:.4rem .9rem;border-radius:6px;
+  background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);
+  color:#f87171;font-size:.75rem;font-weight:600;cursor:pointer;transition:.15s;}
+.nq-wrong-btn:hover{background:rgba(239,68,68,.22);}
+.nq-export-btn{font-size:.7rem;padding:.28rem .65rem;border-radius:6px;
+  background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);
+  color:#4ade80;cursor:pointer;transition:.15s;font-weight:600;}
+.nq-export-btn:hover{background:rgba(74,222,128,.2);}
+
+/* 기타 */
+.ma-btn{font-size:.65rem;padding:.2rem .5rem;border-radius:5px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;}
+.ma-btn:hover{background:rgba(255,255,255,.12);color:#eee;}
+.study-close{font-size:.75rem;padding:.25rem .6rem;border-radius:5px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:#bbb;cursor:pointer;transition:.15s;}
+.study-close:hover{background:rgba(255,255,255,.14);color:#eee;}
+.scrap-del{font-size:.62rem;padding:.18rem .45rem;border-radius:4px;
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);
+  color:#f87171;cursor:pointer;transition:.15s;margin-left:auto;}
+.scrap-del:hover{background:rgba(239,68,68,.2);}
+
+select{box-sizing:border-box;font-family:inherit;}
+</style></head><body>
+<h1>📋 모범 분석 · ${esc(sc.genre||'')} · ${today}</h1>
+<p style="color:#888;font-size:10pt">장르: ${esc(sc.genre||'')} | 상황: ${esc(sc.situation||'')}</p>
+<h2>📝 대본 원문</h2>
+<div class="script-box">${scriptLines}</div>
+<div class="q-box"><b style="color:#7a6000">🎯 랜덤 질문</b><br>${esc(sc.randQ||'')}</div>
+<h2>📋 모범 분석</h2>
+<table>${rows}</table>
+<h2 style="margin-top:24px;color:#1565c0;">✍️ 내 분석 작성란</h2>
+<table>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;width:140px;vertical-align:top;">① 씬 소개</td><td style="padding:8px;border:1px solid #bbdefb;height:55px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">② 갈등 구조</td><td style="padding:8px;border:1px solid #bbdefb;height:55px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">③ 핵심 대사</td><td style="padding:8px;border:1px solid #bbdefb;height:55px;">&nbsp;</td></tr>
+  <tr class="write-row"><td style="padding:6px 10px;background:#e3f2fd;border:1px solid #bbdefb;font-weight:bold;color:#1565c0;vertical-align:top;">④ 연출 제안</td><td style="padding:8px;border:1px solid #bbdefb;height:55px;">&nbsp;</td></tr>
+</table>
+</body></html>`;
+  const blob=new Blob(['\uFEFF'+html],{type:'application/msword;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a2=document.createElement('a');
+  a2.href=url;a2.download='모범분석_'+esc(sc.genre||'대본')+'_'+today+'.doc';
+  document.body.appendChild(a2);a2.click();
+  document.body.removeChild(a2);URL.revokeObjectURL(url);
+}
+
+function closeSummaryAndFetch(){document.getElementById('summary-overlay')&&(document.getElementById('summary-overlay').style.display='none');fetchAll();}
+</script>
+</body>
+</html>
